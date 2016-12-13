@@ -17,7 +17,7 @@ object EncryptedRoomNames {
   }
 
   def decryptRoomName(encryptedName: String, sectorId: Int): String = {
-    def rotateLetter(c: Char): Char = {
+    def rotateChar(c: Char): Char = {
       val v1 = c + (sectorId % 26)
       val v2 = v1 - (if (v1 > 'z') 26 else 0)
       v2.toChar
@@ -25,7 +25,7 @@ object EncryptedRoomNames {
     def decodeChar(c: Char): Char =
       c match {
         case '-' => ' '
-        case _ => rotateLetter(c)
+        case _ => rotateChar(c)
       }
     (encryptedName map decodeChar).mkString
   }
