@@ -16,12 +16,10 @@ object EncryptedRoomNames {
     Some((encryptedName, sectorId.toInt)) filter (_ => checksum == expectedChecksum)
   }
 
-  private final val z = 'z'.toInt
-
   def decryptRoomName(encryptedName: String, sectorId: Int): String = {
     def rotateLetter(c: Char): Char = {
-      val v1 = c.toInt + (sectorId % 26)
-      val v2 = v1 - (if (v1 > z) 26 else 0)
+      val v1 = c + (sectorId % 26)
+      val v2 = v1 - (if (v1 > 'z') 26 else 0)
       v2.toChar
     }
     def decodeChar(c: Char): Char =
