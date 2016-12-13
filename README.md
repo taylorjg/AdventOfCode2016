@@ -5,3 +5,4 @@
 * [Day 1: No Time for a Taxicab](http://adventofcode.com/2016/day/1)
 * [Day 2: Bathroom Security](http://adventofcode.com/2016/day/2)
 * [Day 3: Squares With Three Sides](http://adventofcode.com/2016/day/3)
+* [Day 4: Security Through Obscurity](http://adventofcode.com/2016/day/4)
