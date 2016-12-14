@@ -7,3 +7,4 @@
 * [Day 3: Squares With Three Sides](http://adventofcode.com/2016/day/3)
 * [Day 4: Security Through Obscurity](http://adventofcode.com/2016/day/4)
 * [Day 5: How About a Nice Game of Chess?](http://adventofcode.com/2016/day/5)
+* [Day 6: Signals and Noise](http://adventofcode.com/2016/day/6)
