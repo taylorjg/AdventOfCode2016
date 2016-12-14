@@ -1,14 +1,30 @@
+import scala.io.Source
+
 object TLSTwiddler {
 
-  def supportsTLS(s: String): Boolean = {
-    val m = Regex.findAllIn(s)
-    val bit1 = m.group(1)
-    val bit2 = m.group(2)
-    val bit3 = m.group(3)
-    (bit1.containsABBA || bit3.containsABBA) && !bit2.containsABBA
+  def main(args: Array[String]): Unit = {
+    val lines = Source.fromResource("day7-input.txt").getLines.toList
+    val answer = lines map supportsTLS count (_ == true)
+    println(s"answer: $answer")
   }
 
-  private final val Regex = """(.*)\[(.*)\](.*)""".r
+  def supportsTLS(input: String): Boolean = {
+    def loop(s: String, bos: List[String], bis: List[String]): (List[String], List[String]) = {
+      val openBracketPos = s.indexOf('[')
+      val closeBracketPos = s.indexOf(']')
+      if (openBracketPos > 0 && closeBracketPos > 0) {
+        val bitOutside = s.substring(0, openBracketPos)
+        val bitInside = s.substring(openBracketPos + 1, closeBracketPos)
+        val rest = s.substring(closeBracketPos + 1)
+        loop(rest, bitOutside :: bos, bitInside :: bis)
+      }
+      else {
+        (s :: bos, bis)
+      }
+    }
+    val (bitsOutside, bitsInside) = loop(input, List.empty, List.empty)
+    bitsOutside.exists(_.containsABBA) && bitsInside.forall(!_.containsABBA)
+  }
 
   private implicit class StringOps(s: String) {
     def containsABBA: Boolean = {
@@ -19,7 +35,8 @@ object TLSTwiddler {
         val c4 = iv(3)
         c1 == c4 && c2 == c3 && c1 != c2
       }
-      s.indices take (s.length - 3) map (start => s.substring(start, start + 4)) exists isABBA
+      val possibleABBAs = s.indices dropRight 3 map (start => s.substring(start, start + 4))
+      possibleABBAs exists isABBA
     }
   }
 }
