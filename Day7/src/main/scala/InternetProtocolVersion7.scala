@@ -1,6 +1,6 @@
 import scala.io.Source
 
-object TLSTwiddler {
+object InternetProtocolVersion7 {
 
   def main(args: Array[String]): Unit = {
     val lines = Source.fromResource("day7-input.txt").getLines.toList
@@ -11,6 +11,11 @@ object TLSTwiddler {
   def supportsTLS(input: String): Boolean = {
     val (supernets, hypernets) = partitionInput(input)
     supernets.exists(_.containsABBA) && hypernets.forall(!_.containsABBA)
+  }
+
+  def supportsSSL(input: String): Boolean = {
+    val (supernets, hypernets) = partitionInput(input)
+    ???
   }
 
   private def partitionInput(input: String): (List[String], List[String]) = {
