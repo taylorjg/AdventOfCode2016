@@ -10,3 +10,4 @@
 * [Day 6: Signals and Noise](http://adventofcode.com/2016/day/6)
 * [Day 7: Internet Protocol Version 7](http://adventofcode.com/2016/day/7)
 * [Day 8: Two-Factor Authentication](http://adventofcode.com/2016/day/8)
+* [Day 9: Explosives in Cyberspace](http://adventofcode.com/2016/day/9)
