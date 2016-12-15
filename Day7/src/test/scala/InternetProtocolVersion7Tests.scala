@@ -23,7 +23,7 @@ class InternetProtocolVersion7Tests extends FlatSpec {
   }
 
   "SSL example 2" should "not support SSL" in {
-    assert(InternetProtocolVersion7.supportsSSL("xyx[xyx]xyx"))
+    assert(!InternetProtocolVersion7.supportsSSL("xyx[xyx]xyx"))
   }
 
   "SSL example 3" should "support SSL" in {
