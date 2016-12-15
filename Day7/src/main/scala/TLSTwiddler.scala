@@ -9,21 +9,26 @@ object TLSTwiddler {
   }
 
   def supportsTLS(input: String): Boolean = {
-    def loop(s: String, bos: List[String], bis: List[String]): (List[String], List[String]) = {
+    val (supernets, hypernets) = partitionInput(input)
+    supernets.exists(_.containsABBA) && hypernets.forall(!_.containsABBA)
+  }
+
+  private def partitionInput(input: String): (List[String], List[String]) = {
+    @annotation.tailrec
+    def loop(s: String, ss: List[String], hs: List[String]): (List[String], List[String]) = {
       val openBracketPos = s.indexOf('[')
       val closeBracketPos = s.indexOf(']')
       if (openBracketPos > 0 && closeBracketPos > 0) {
-        val bitOutside = s.substring(0, openBracketPos)
-        val bitInside = s.substring(openBracketPos + 1, closeBracketPos)
+        val supernet = s.substring(0, openBracketPos)
+        val hypernet = s.substring(openBracketPos + 1, closeBracketPos)
         val rest = s.substring(closeBracketPos + 1)
-        loop(rest, bitOutside :: bos, bitInside :: bis)
+        loop(rest, supernet :: ss, hypernet :: hs)
       }
       else {
-        (s :: bos, bis)
+        (s :: ss, hs)
       }
     }
-    val (bitsOutside, bitsInside) = loop(input, List.empty, List.empty)
-    bitsOutside.exists(_.containsABBA) && bitsInside.forall(!_.containsABBA)
+    loop(input, List.empty, List.empty)
   }
 
   private implicit class StringOps(s: String) {
