@@ -30,7 +30,7 @@ object InternetProtocolVersion7 {
     def loop(s: String, ss: List[String], hs: List[String]): (List[String], List[String]) = {
       val openBracketPos = s.indexOf('[')
       val closeBracketPos = s.indexOf(']')
-      if (openBracketPos > 0 && closeBracketPos > 0) {
+      if (openBracketPos >= 0 && closeBracketPos >= 0) {
         val supernet = s.substring(0, openBracketPos)
         val hypernet = s.substring(openBracketPos + 1, closeBracketPos)
         val rest = s.substring(closeBracketPos + 1)
