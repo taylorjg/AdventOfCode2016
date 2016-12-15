@@ -75,4 +75,22 @@ class TwoFactorAuthenticationTests extends FlatSpec {
       """.stripMargin.replaceAll("""\s""", "")
     assert(actual == expected)
   }
+
+  "list of instructions" should "give the correct result" in {
+    val instructions = Seq(
+      "rect 3x2",
+      "rotate column x=1 by 1",
+      "rotate row y=0 by 4",
+      "rotate column x=1 by 1"
+    )
+    val screen = Screen.processInstructions(7, 3, instructions)
+    val actual = Screen.matrixToString(screen.matrix)
+    val expected =
+      """
+        |.#..#.#
+        |#.#....
+        |.#.....
+      """.stripMargin.replaceAll("""\s""", "")
+    assert(actual == expected)
+  }
 }

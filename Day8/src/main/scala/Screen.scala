@@ -53,6 +53,9 @@ object Screen {
   def matrixToString(m: Vector[Boolean]): String =
     (m map (if (_) "#" else ".")).mkString
 
+  def processInstructions(cs: Int, rs: Int, instructions: Seq[String]): Screen =
+    instructions.foldLeft(new Screen(cs, rs))((acc, instruction) => acc.processInstruction(instruction))
+
   private def stringToMatrix(s: String): Vector[Boolean] = {
     val s2 = s.replaceAll("""\s""", "")
     Vector.tabulate(s2.length)(s2(_) == '#')
