@@ -1,9 +1,11 @@
+import Level._
+
 object BalanceBots {
 
   def processInstructions(instructions: Seq[String]): BotGraph = {
-    val (as, bs) = instructions partition (SetValueRegex.pattern.matcher(_).matches)
-    val botGraph1 = as.foldLeft(new BotGraph)(processSetValueInstruction)
-    val botGraph2 = bs.foldLeft(botGraph1)(processLowHighInstruction)
+    val (xs, ys) = instructions partition (SetValueRegex.pattern.matcher(_).matches)
+    val botGraph1 = xs.foldLeft(new BotGraph)(processSetValueInstruction)
+    val botGraph2 = ys.foldLeft(botGraph1)(processLowHighInstruction)
     botGraph2
   }
 
@@ -25,13 +27,15 @@ object BalanceBots {
     val highOutputNumber = if (highTo.startsWith("output")) Some(extractNumberFrom(highTo)) else None
 
     val botGraph1 = (lowBotNumber, lowOutputNumber) match {
-      case (Some(lbn), None) => botGraph.connectBots(botNumber, lbn, isLow = true)
-      case (None, Some(lon)) => botGraph.addOutput(botNumber, lon, isLow = true)
+      case (Some(lbn), None) => botGraph.connectBots(botNumber, lbn, Low)
+      case (None, Some(lon)) => botGraph.addOutput(botNumber, lon, Low)
+      case _ => throw new Exception("Should have bot number or output number!")
     }
 
     val botGraph2 = (highBotNumber, highOutputNumber) match {
-      case (Some(hbn), None) => botGraph1.connectBots(botNumber, hbn, isLow = false)
-      case (None, Some(hon)) => botGraph1.addOutput(botNumber, hon, isLow = false)
+      case (Some(hbn), None) => botGraph1.connectBots(botNumber, hbn, High)
+      case (None, Some(hon)) => botGraph1.addOutput(botNumber, hon, High)
+      case _ => throw new Exception("Should have bot number or output number!")
     }
 
     botGraph2
