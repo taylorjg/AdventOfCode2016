@@ -2,6 +2,13 @@ import Level._
 
 object BalanceBots {
 
+  def dumpBotGraph(botGraph: BotGraph): Unit =
+    botGraph.botMap foreach { case (_, b) => dumpBot(b) }
+
+  def dumpBot(b: Bot): Unit = {
+    println(s"bot ${b.botNumber} - low: ${b.low}; high: ${b.high}; values: ${b.values}")
+  }
+
   def processInstructions(instructions: Seq[String]): BotGraph = {
     val (xs, ys) = instructions partition (SetValueRegex.pattern.matcher(_).matches)
     val botGraph1 = xs.foldLeft(new BotGraph)(processSetValueInstruction)
@@ -18,7 +25,7 @@ object BalanceBots {
 
   private def processLowHighInstruction(botGraph: BotGraph, instruction: String): BotGraph = {
     val m = LowHighRegex.findAllIn(instruction)
-    val botNumber = m.group(1).toInt
+    val fromBotNumber = m.group(1).toInt
     val lowTo = m.group(2)
     val highTo = m.group(3)
     val lowBotNumber = if (lowTo.startsWith("bot")) Some(extractNumberFrom(lowTo)) else None
@@ -27,18 +34,16 @@ object BalanceBots {
     val highOutputNumber = if (highTo.startsWith("output")) Some(extractNumberFrom(highTo)) else None
 
     val botGraph1 = (lowBotNumber, lowOutputNumber) match {
-      case (Some(lbn), None) => botGraph.connectBots(botNumber, lbn, Low)
-      case (None, Some(lon)) => botGraph.addOutput(botNumber, lon, Low)
-      case _ => throw new Exception("Should have bot number or output number!")
+      case (Some(lbn), None) => botGraph.connectBots(fromBotNumber, lbn, Low)
+      case (None, Some(lon)) => botGraph.connectOutput(fromBotNumber, lon, Low)
+      case _ => throw new Exception(s"""Bot $fromBotNumber is missing it's low destination""")
     }
 
-    val botGraph2 = (highBotNumber, highOutputNumber) match {
-      case (Some(hbn), None) => botGraph1.connectBots(botNumber, hbn, High)
-      case (None, Some(hon)) => botGraph1.addOutput(botNumber, hon, High)
-      case _ => throw new Exception("Should have bot number or output number!")
+    (highBotNumber, highOutputNumber) match {
+      case (Some(hbn), None) => botGraph1.connectBots(fromBotNumber, hbn, High)
+      case (None, Some(hon)) => botGraph1.connectOutput(fromBotNumber, hon, High)
+      case _ => throw new Exception(s"""Bot $fromBotNumber is missing it's high destination""")
     }
-
-    botGraph2
   }
 
   private def extractNumberFrom(s: String): Int = NumberRegex.findAllIn(s).group(1).toInt
