@@ -1,13 +1,13 @@
 import Screen._
 
-class Screen(cs: Int, rs: Int, val matrix: Vector[Boolean]) {
+class Screen(width: Int, height: Int, val matrix: Vector[Boolean]) {
 
-  def this(cs: Int, rs: Int) {
-    this(cs, rs, Vector.fill(cs * rs)(false))
+  def this(width: Int, height: Int) {
+    this(width, height, Vector.fill(width * height)(false))
   }
 
-  def this(cs: Int, rs: Int, s: String) {
-    this(cs, rs, stringToMatrix(s))
+  def this(width: Int, height: Int, s: String) {
+    this(width, height, stringToMatrix(s))
   }
 
   def processInstruction(instruction: String): Screen =
@@ -20,31 +20,31 @@ class Screen(cs: Int, rs: Int, val matrix: Vector[Boolean]) {
 
   private def processRect(instruction: String): Screen = {
     val m = RectRegex.findAllIn(instruction)
-    val w = m.group(1).toInt
-    val h = m.group(2).toInt
-    val newMatrix = Vector.tabulate(rs, cs)((y, x) => x < w && y < h).flatten
-    val finalMatrix = mergeMatricesLogicalOr(matrix, newMatrix, cs)
-    new Screen(cs, rs, finalMatrix)
+    val rectWidth = m.group(1).toInt
+    val rectHeight = m.group(2).toInt
+    val rectMatrix = Vector.tabulate(width, height)(_ < rectWidth && _ < rectHeight).transpose.flatten
+    val newMatrix = mergeMatricesUsingLogicalOr(matrix, rectMatrix)
+    new Screen(width, height, newMatrix)
   }
 
   private def processRotateColumn(instruction: String): Screen = {
     val m = RotateColumnRegex.findAllIn(instruction)
     val y = m.group(1).toInt
     val by = m.group(2).toInt
-    val oldCol = extractColumn(matrix, cs, y)
+    val oldCol = extractColumn(matrix, width, y)
     val newCol = rotateRight(oldCol, by)
-    val newMatrix = insertColumn(matrix, cs, y, newCol)
-    new Screen(cs, rs, newMatrix)
+    val newMatrix = insertColumn(matrix, width, y, newCol)
+    new Screen(width, height, newMatrix)
   }
 
   private def processRotateRow(instruction: String): Screen = {
     val m = RotateRowRegex.findAllIn(instruction)
     val x = m.group(1).toInt
     val by = m.group(2).toInt
-    val oldRow = extractRow(matrix, cs, x)
+    val oldRow = extractRow(matrix, width, x)
     val newRow = rotateRight(oldRow, by)
-    val newMatrix = insertRow(matrix, cs, x, newRow)
-    new Screen(cs, rs, newMatrix)
+    val newMatrix = insertRow(matrix, width, x, newRow)
+    new Screen(width, height, newMatrix)
   }
 }
 
@@ -53,65 +53,51 @@ object Screen {
   def matrixToString(m: Vector[Boolean]): String =
     (m map (if (_) "#" else ".")).mkString
 
-  def processInstructions(cs: Int, rs: Int, instructions: Seq[String]): Screen =
-    instructions.foldLeft(new Screen(cs, rs))((acc, instruction) => acc.processInstruction(instruction))
+  def processInstructions(width: Int, height: Int, instructions: Seq[String]): Screen =
+    instructions.foldLeft(new Screen(width, height))(_.processInstruction(_))
 
   private def stringToMatrix(s: String): Vector[Boolean] = {
     val s2 = s.replaceAll("""\s""", "")
     Vector.tabulate(s2.length)(s2(_) == '#')
   }
 
-  private def extractColumn(m: Vector[Boolean], cs: Int, col: Int): Vector[Boolean] =
+  private def extractColumn(m: Vector[Boolean], width: Int, col: Int): Vector[Boolean] =
     m.zipWithIndex collect {
-      case (b, index) if index % cs == col => b
+      case (b, index) if index % width == col => b
     }
 
-  private def extractRow(m: Vector[Boolean], cs: Int, row: Int): Vector[Boolean] =
+  private def extractRow(m: Vector[Boolean], width: Int, row: Int): Vector[Boolean] =
     m.zipWithIndex collect {
-      case (b, index) if index / cs == row => b
+      case (b, index) if index / width == row => b
     }
 
-  private def insertColumn(m: Vector[Boolean], cs: Int, col: Int, v: Vector[Boolean]): Vector[Boolean] =
+  private def insertColumn(m: Vector[Boolean], width: Int, col: Int, v: Vector[Boolean]): Vector[Boolean] =
     m.zipWithIndex map {
       case (b, index) => {
-        val x = index % cs
-        val y = index / cs
+        val x = index % width
+        val y = index / width
         if (x == col) v(y) else b
       }
     }
 
-  private def insertRow(m: Vector[Boolean], cs: Int, row: Int, v: Vector[Boolean]): Vector[Boolean] =
+  private def insertRow(m: Vector[Boolean], width: Int, row: Int, v: Vector[Boolean]): Vector[Boolean] =
     m.zipWithIndex map {
       case (b, index) => {
-        val x = index % cs
-        val y = index / cs
+        val x = index % width
+        val y = index / width
         if (y == row) v(x) else b
       }
     }
 
   private def rotateRight(vector: Vector[Boolean], by: Int): Vector[Boolean] = {
     @annotation.tailrec
-    def loop(remaining: Int, v: Vector[Boolean]): Vector[Boolean] =
-      if (remaining == 0) v else loop(remaining - 1, v.last +: v.init)
-    loop(by, vector)
+    def loop(v: Vector[Boolean], n: Int): Vector[Boolean] =
+      if (n == 0) v else loop(v.last +: v.init, n - 1)
+    loop(vector, by)
   }
 
-  private def mergeMatricesLogicalOr(m1: Vector[Boolean],
-                                     m2: Vector[Boolean],
-                                     cs: Int): Vector[Boolean] =
-    mergeMatrices(m1, m2, cs, (_, _, b1, b2) => b1 | b2)
-
-  private def mergeMatrices(m1: Vector[Boolean],
-                            m2: Vector[Boolean],
-                            cs: Int,
-                            f: (Int, Int, Boolean, Boolean) => Boolean): Vector[Boolean] =
-    m1.zipWithIndex.zip(m2) map {
-      case ((b1, index), b2) => {
-        val x = index % cs
-        val y = index / cs
-        f(x, y, b1, b2)
-      }
-    }
+  private def mergeMatricesUsingLogicalOr(m1: Vector[Boolean], m2: Vector[Boolean]): Vector[Boolean] =
+    m1.zip(m2) map { case (b1, b2) => b1 | b2 }
 
   private final val RectRegex = """rect (\d+)x(\d+)""".r
   private final val RotateColumnRegex = """rotate column x=(\d+) by (\d+)""".r
