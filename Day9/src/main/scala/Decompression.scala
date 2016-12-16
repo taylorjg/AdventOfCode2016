@@ -9,17 +9,17 @@ object Decompression {
     }
     @annotation.tailrec
     def loop(s: String, acc: String): String = {
-      val openBracket = s.indexOf('(')
-      val closeBracket = s.indexOf(')')
-      if (openBracket >= 0 && closeBracket >= 0) {
-        val prefix = s.substring(0, openBracket)
-        val marker = s.substring(openBracket + 1, closeBracket)
+      val openBracketPos = s.indexOf('(')
+      val closeBracketPos = s.indexOf(')')
+      if (openBracketPos >= 0 && closeBracketPos >= 0) {
+        val prefix = s.substring(0, openBracketPos)
+        val marker = s.substring(openBracketPos + 1, closeBracketPos)
         val m = MarkerRegex.findAllIn(marker)
         val length = m.group(1).toInt
         val count = m.group(2).toInt
-        val data = s.substring(closeBracket + 1, closeBracket + 1 + length)
+        val data = s.substring(closeBracketPos + 1, closeBracketPos + 1 + length)
         val repeatedData = repeat(data, count)
-        val suffix = s.substring(closeBracket + 1 + length)
+        val suffix = s.substring(closeBracketPos + 1 + length)
         loop(suffix, acc + prefix + repeatedData)
       }
       else acc + s
@@ -30,16 +30,35 @@ object Decompression {
   def decompressedLength(input: String): Int = {
     @annotation.tailrec
     def loop(s: String, acc: Int): Int = {
-      val openBracket = s.indexOf('(')
-      val closeBracket = s.indexOf(')')
-      if (openBracket >= 0 && closeBracket >= 0) {
-        val prefix = s.substring(0, openBracket)
-        val marker = s.substring(openBracket + 1, closeBracket)
+      val openBracketPos = s.indexOf('(')
+      val closeBracketPos = s.indexOf(')')
+      if (openBracketPos >= 0 && closeBracketPos >= 0) {
+        val marker = s.substring(openBracketPos + 1, closeBracketPos)
         val m = MarkerRegex.findAllIn(marker)
         val length = m.group(1).toInt
         val count = m.group(2).toInt
-        val suffix = s.substring(closeBracket + 1 + length)
-        loop(suffix, acc + prefix.length + (count * length))
+        val suffix = s.substring(closeBracketPos + 1 + length)
+        loop(suffix, acc + openBracketPos + (length * count))
+      }
+      else acc + s.length
+    }
+    loop(input, 0)
+  }
+
+  def decompressedLengthV2(input: String): Long = {
+    @annotation.tailrec
+    def loop(s: String, acc: Long): Long = {
+      val openBracketPos = s.indexOf('(')
+      val closeBracketPos = s.indexOf(')')
+      if (openBracketPos >= 0 && closeBracketPos >= 0) {
+        val marker = s.substring(openBracketPos + 1, closeBracketPos)
+        val m = MarkerRegex.findAllIn(marker)
+        val length = m.group(1).toInt
+        val count = m.group(2).toInt
+        val data = s.substring(closeBracketPos + 1, closeBracketPos + 1 + length)
+        val expandedDataLength = decompressedLengthV2(data)
+        val suffix = s.substring(closeBracketPos + 1 + length)
+        loop(suffix, acc + openBracketPos + (expandedDataLength * count))
       }
       else acc + s.length
     }

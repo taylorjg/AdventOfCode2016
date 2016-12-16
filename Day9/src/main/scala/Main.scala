@@ -11,5 +11,8 @@ object Main {
 
     val answer2 = Decompression.decompressedLength(input)
     println(s"Decompressed length: $answer2")
+
+    val answer3 = Decompression.decompressedLengthV2(input)
+    println(s"Decompressed length (V2): $answer3")
   }
 }
