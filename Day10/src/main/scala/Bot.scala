@@ -1,6 +1,6 @@
 import Level._
 
-class Bot(val botNumber: Int, val values: Seq[Value]) {
+class Bot(botNumber: Int, values: Seq[Value]) {
   def this(botNumber: Int) = this(botNumber, Seq())
   def low(botGraph: BotGraph): Option[Int] = evaluate(botGraph, Low)
   def high(botGraph: BotGraph): Option[Int] = evaluate(botGraph, High)
@@ -9,13 +9,10 @@ class Bot(val botNumber: Int, val values: Seq[Value]) {
       case Low => low(botGraph)
       case High => high(botGraph)
     }
-  def connectTo(fromBotNumber: Int, level: Level.Value): Bot = {
-    if (values.size == 2) throw new Exception(s"Attempt to add $level value to completed bot $botNumber")
-    else new Bot(botNumber, BotValue(fromBotNumber, level) +: values)
-  }
-  def setValue(value: Int): Bot = {
+  def setValue(value: Int): Bot =
     new Bot(botNumber, LiteralValue(value) +: values)
-  }
+  def connectTo(fromBotNumber: Int, level: Level.Value): Bot =
+    new Bot(botNumber, BotValue(fromBotNumber, level) +: values)
   private def evaluate(botGraph: BotGraph, level: Level.Value): Option[Int] = {
     val vs = values flatMap (_.value(botGraph))
     if (vs.size == 2) {

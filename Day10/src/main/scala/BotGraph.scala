@@ -1,4 +1,4 @@
-class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, BotValue]) {
+class BotGraph(botMap: Map[Int, Bot], outputMap: Map[Int, BotValue]) {
 
   def this() = this(Map(), Map())
 
@@ -16,10 +16,8 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, BotValue]) {
   }
 
   def connectOutput(fromBotNumber: Int, outputNumber: Int, level: Level.Value): BotGraph = {
-    val fromBot = getBot(fromBotNumber)
-    val newBotMap = botMap.updated(fromBotNumber, fromBot)
     val newOutputMap = outputMap.updated(outputNumber, BotValue(fromBotNumber, level))
-    new BotGraph(newBotMap, newOutputMap)
+    new BotGraph(botMap, newOutputMap)
   }
 
   def findComparerOf(value1: Int, value2: Int): Option[Int] = {
