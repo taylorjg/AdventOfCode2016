@@ -37,8 +37,8 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, (Bot, Level.Value)
       }
     }
     val rootBots = botMap collect { case(_, b) if b.low.nonEmpty && b.high.nonEmpty => b }
-    println(s"--------------------------------------------------------------------------------")
-    rootBots foreach BalanceBots.dumpBot
+//    println(s"--------------------------------------------------------------------------------")
+//    rootBots foreach (BalanceBots.dumpBot(_, ""))
     loop(rootBots.toSeq)
   }
 }
