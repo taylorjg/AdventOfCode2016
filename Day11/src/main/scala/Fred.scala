@@ -7,6 +7,14 @@ object Fred {
   private type FloorsToMicrochips= Map[Floor, Seq[Microchip]]
   private type FloorContents = (Floor, Seq[Generator], Seq[Microchip])
 
+  // Commands:
+  // ElavatorUp(numFloors, Seq[Generator], Seq[Microchip])
+  // ElavatorDown(numFloors, Seq[Generator], Seq[Microchip])
+
+  // Rules:
+  // Elevator must contain 1G or 1M or 2G or 2M or 1G+1M
+  // ???
+
   private case class State(elevatorFloor: Floor,
                            m1: FloorsToGenerators,
                            m2: FloorsToMicrochips)
@@ -15,6 +23,8 @@ object Fred {
     val parsedLines = arrangement map parseLine
     val initialState = State(1, makeGeneratorsMap(parsedLines), makeMicrochipsMap(parsedLines))
     println(s"initialState: $initialState")
+    // Calculate all possible legal sequences of commands that result in all items residing on the 4th floor
+    // Find the sequence with the minimum number of steps (i.e. sum of numFloors)
     -1
   }
 
@@ -37,45 +47,29 @@ object Fred {
   private def parseLineContents1(s: String): FloorContents = {
     val m = FloorContains1Regex.findAllIn(s)
     val floorName = m.group(1)
-    val thing1 = m.group(2)
-    val (gs, ms) = parseThing(thing1)
+    val (gs, ms) = parseThing(m.group(2))
     (FloorNames(floorName), gs, ms)
   }
 
   private def parseLineContents2(s: String): FloorContents = {
     val m = FloorContains2Regex.findAllIn(s)
     val floorName = m.group(1)
-    val thing1 = m.group(2)
-    val thing2 = m.group(3)
-    val (gs1, ms1) = parseThing(thing1)
-    val (gs2, ms2) = parseThing(thing2)
-    (FloorNames(floorName), gs1 ++ gs2, ms1 ++ ms2)
+    val (gs, ms) = parseThings(m.group(2), m.group(3))
+    (FloorNames(floorName), gs, ms)
   }
 
   private def parseLineContents3(s: String): FloorContents = {
     val m = FloorContains3Regex.findAllIn(s)
     val floorName = m.group(1)
-    val thing1 = m.group(2)
-    val thing2 = m.group(3)
-    val thing3 = m.group(4)
-    val (gs1, ms1) = parseThing(thing1)
-    val (gs2, ms2) = parseThing(thing2)
-    val (gs3, ms3) = parseThing(thing3)
-    (FloorNames(floorName), gs1 ++ gs2 ++ gs3, ms1 ++ ms2 ++ ms3)
+    val (gs, ms) = parseThings(m.group(2), m.group(3), m.group(4))
+    (FloorNames(floorName), gs, ms)
   }
 
   private def parseLineContents4(s: String): FloorContents = {
     val m = FloorContains4Regex.findAllIn(s)
     val floorName = m.group(1)
-    val thing1 = m.group(2)
-    val thing2 = m.group(3)
-    val thing3 = m.group(4)
-    val thing4 = m.group(5)
-    val (gs1, ms1) = parseThing(thing1)
-    val (gs2, ms2) = parseThing(thing2)
-    val (gs3, ms3) = parseThing(thing3)
-    val (gs4, ms4) = parseThing(thing4)
-    (FloorNames(floorName), gs1 ++ gs2 ++ gs3 ++ gs4, ms1 ++ ms2 ++ ms3 ++ ms4)
+    val (gs, ms) = parseThings(m.group(2), m.group(3), m.group(4), m.group(5))
+    (FloorNames(floorName), gs, ms)
   }
 
   private def parseNothingRelevant(s: String): FloorContents = {
@@ -84,19 +78,25 @@ object Fred {
     (FloorNames(floorName), Seq(), Seq())
   }
 
-  private def parseThing(s: String): (Seq[Generator], Seq[Microchip]) = {
-    val b1 = GeneratorRegex.pattern.matcher(s).matches
-    val b2 = MicrochipRegex.pattern.matcher(s).matches
+  private def parseThings(things: String*): (Seq[Generator], Seq[Microchip]) =
+    things.foldLeft((Seq[Generator](), Seq[Microchip]()))((acc, thing) => {
+      val (gs, ms) = parseThing(thing)
+      (acc._1 ++ gs, acc._2 ++ ms)
+    })
+
+  private def parseThing(thing: String): (Seq[Generator], Seq[Microchip]) = {
+    val b1 = GeneratorRegex.pattern.matcher(thing).matches
+    val b2 = MicrochipRegex.pattern.matcher(thing).matches
     (b1, b2) match {
       case (true, false) =>
-        val m = GeneratorRegex.findAllIn(s)
+        val m = GeneratorRegex.findAllIn(thing)
         val generator = m.group(1)
         (Seq(generator), Seq())
       case (false, true) =>
-        val m = MicrochipRegex.findAllIn(s)
+        val m = MicrochipRegex.findAllIn(thing)
         val microchip = m.group(1)
         (Seq(), Seq(microchip))
-      case _ => throw new Exception(s"""Bad input, "$s".""")
+      case _ => throw new Exception(s"""Bad input, "$thing".""")
     }
   }
 
@@ -106,13 +106,15 @@ object Fred {
   private def makeMicrochipsMap(parsedLines: Seq[FloorContents]): FloorsToMicrochips =
     (parsedLines map (pl => (pl._1, pl._3))).toMap
 
-  private final val FloorContains1Regex = """The (\w+) floor contains a (\w+(?: generator|-compatible microchip)).""".r
-  private final val FloorContains2Regex = """The (\w+) floor contains a (\w+(?: generator|-compatible microchip)) and a (\w+(?: generator|-compatible microchip)).""".r
-  private final val FloorContains3Regex = """The (\w+) floor contains a (\w+(?: generator|-compatible microchip)), a (\w+(?: generator|-compatible microchip)), and a (\w+(?: generator|-compatible microchip)).""".r
-  private final val FloorContains4Regex = """The (\w+) floor contains a (\w+(?: generator|-compatible microchip)), a (\w+(?: generator|-compatible microchip)), a (\w+(?: generator|-compatible microchip)), and a (\w+(?: generator|-compatible microchip)).""".r
-  private final val FloorNothingRelevantRegex = """The (\w+) floor contains nothing relevant.""".r
-  private final val GeneratorRegex = """(\w+) generator""".r
-  private final val MicrochipRegex = """(\w+)-compatible microchip""".r
+  private final val F = """\w+"""
+  private final val T = """\w+(?: generator|-compatible microchip)"""
+  private final val FloorContains1Regex = s"The ($F) floor contains a ($T).".r
+  private final val FloorContains2Regex = s"The ($F) floor contains a ($T) and a ($T).".r
+  private final val FloorContains3Regex = s"The ($F) floor contains a ($T), a ($T), and a ($T).".r
+  private final val FloorContains4Regex = s"The ($F) floor contains a ($T), a ($T), a ($T), and a ($T)."r
+  private final val FloorNothingRelevantRegex = s"The ($F) floor contains nothing relevant.".r
+  private final val GeneratorRegex = s"($F) generator".r
+  private final val MicrochipRegex = s"($F)-compatible microchip".r
 
   private final val FloorNames = Map(
     "first" -> 1,
