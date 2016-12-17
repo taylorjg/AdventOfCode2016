@@ -25,15 +25,8 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, (Bot, Level.Value)
   def findComparerOf(value1: Int, value2: Int): Option[Int] = {
     val high = Some(Math.max(value1, value2))
     val low = Some(Math.min(value1, value2))
-    //    botMap collectFirst {
-    //      case (bn, b) if b.high(this) == high && b.low(this) == low => bn
-    //    }
-    val v1 = botMap filter {
-      case (bn, b) => {
-        println(s"Examining $bn...")
-        b.high(this) == high && b.low(this) == low
-      }
+    botMap collectFirst {
+      case (bn, b) if b.high(this) == high && b.low(this) == low => bn
     }
-    v1.headOption map (_._1)
   }
 }
