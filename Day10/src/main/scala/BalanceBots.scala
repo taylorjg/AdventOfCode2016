@@ -2,33 +2,6 @@ import Level._
 
 object BalanceBots {
 
-  def dumpBotGraph(botGraph: BotGraph): Unit =
-    botGraph.botMap foreach { case (_, bot) => dumpBot(bot) }
-
-  def dumpBot(bot: Bot, indent: String = ""): Unit = {
-    println(s"${indent}bot ${bot.botNumber} - low: ${bot.low}; high: ${bot.high}; values: ${bot.values}")
-  }
-
-  def dumpBotTree(botGraph: BotGraph): Unit = {
-    println()
-    botGraph.botMap foreach {
-      case (_, b) => {
-        BalanceBots.dumpBotTree(b)
-        println()
-      }
-    }
-  }
-
-  def dumpBotTree(bot: Bot): Unit = {
-    def loop(level: Int)(b: Bot): Unit = {
-      val indent = List.fill(level * 2)(' ').mkString
-      dumpBot(b, indent)
-      val cs = b.childBots
-      cs foreach loop(level + 1)
-    }
-    loop(0)(bot)
-  }
-
   def processInstructions(instructions: Seq[String]): BotGraph = {
     val (xs, ys) = instructions partition (SetValueRegex.pattern.matcher(_).matches)
     val botGraph1 = xs.foldLeft(new BotGraph)(processSetValueInstruction)

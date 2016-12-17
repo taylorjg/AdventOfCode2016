@@ -1,40 +1,37 @@
 import Level._
 
 trait Value {
-  def value: Option[Int]
+  def value(botGraph: BotGraph): Option[Int]
 }
 
 case class LiteralValue(v: Int) extends Value {
-  val value: Option[Int] = Some(v)
+  def value(botGraph: BotGraph): Option[Int] = Some(v)
   override def toString: String = s"LiteralValue($v)"
 }
 
-case class BotValue(fromBot: Bot, level: Level.Value) extends Value {
-  def value: Option[Int] = fromBot.value(level)
-  override def toString: String = s"BotValue(${fromBot.botNumber}, $level)"
+case class BotValue(fromBotNumber: Int, level: Level.Value) extends Value {
+  def value(botGraph: BotGraph): Option[Int] = botGraph.getBot(fromBotNumber).value(botGraph, level)
+  override def toString: String = s"BotValue($fromBotNumber, $level)"
 }
 
 class Bot(val botNumber: Int, val values: Seq[Value]) {
   def this(botNumber: Int) = this(botNumber, Seq())
-  def low: Option[Int] = evaluate(Low)
-  def high: Option[Int] = evaluate(High)
-  def value(level: Level.Value): Option[Int] =
+  def low(botGraph: BotGraph): Option[Int] = evaluate(botGraph, Low)
+  def high(botGraph: BotGraph): Option[Int] = evaluate(botGraph, High)
+  def value(botGraph: BotGraph, level: Level.Value): Option[Int] =
     level match {
-      case Low => low
-      case High => high
+      case Low => low(botGraph)
+      case High => high(botGraph)
     }
-  def addValue(fromBot: Bot, level: Level.Value): Bot = {
+  def addValue(fromBotNumber: Int, level: Level.Value): Bot = {
     if (values.size == 2) throw new Exception(s"Attempt to add $level value to completed bot $botNumber")
-    else new Bot(botNumber, new BotValue(fromBot, level) +: values)
+    else new Bot(botNumber, BotValue(fromBotNumber, level) +: values)
   }
   def addValue(value: Int): Bot = {
-    new Bot(botNumber, new LiteralValue(value) +: values)
+    new Bot(botNumber, LiteralValue(value) +: values)
   }
-  def childBots: Seq[Bot] = values collect {
-    case BotValue(b, l) => b
-  }
-  private def evaluate(level: Level.Value): Option[Int] = {
-    val vs = values flatMap (_.value)
+  private def evaluate(botGraph: BotGraph, level: Level.Value): Option[Int] = {
+    val vs = values flatMap (_.value(botGraph))
     if (vs.size == 2) {
       level match {
         case Low => Some(vs.min)

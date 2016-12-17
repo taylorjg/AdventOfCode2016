@@ -14,7 +14,7 @@ class BalanceBotsTests extends FlatSpec {
       """.stripMargin
     val instructions = input.toInstructions
     val botGraph = BalanceBots.processInstructions(instructions)
-    BalanceBots.dumpBotTree(botGraph)
+//    BalanceBots.dumpBotTree(botGraph)
     assert(botGraph.findComparerOf(5, 2).contains(2))
   }
 
