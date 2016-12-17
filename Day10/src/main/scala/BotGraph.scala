@@ -4,7 +4,7 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, OutputValue]) {
 
   def getBot(botNumber: Int): Bot = botMap.getOrElse(botNumber, new Bot(botNumber))
 
-  def addValueToBot(botNumber: Int, value: Int): BotGraph = {
+  def setValue(botNumber: Int, value: Int): BotGraph = {
     val bot = getBot(botNumber)
     new BotGraph(botMap.updated(botNumber, bot.addValue(value)), outputMap)
   }
