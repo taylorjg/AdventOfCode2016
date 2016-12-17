@@ -14,13 +14,10 @@ class BalanceBotsTests extends FlatSpec {
       """.stripMargin
     val instructions = input.toInstructions
     val botGraph = BalanceBots.processInstructions(instructions)
-//    BalanceBots.dumpBotTree(botGraph)
     assert(botGraph.findComparerOf(5, 2).contains(2))
   }
 
   private implicit class StringOps(s: String) {
-    def toInstructions: Seq[String] =
-      s.split("\n") map (_.trim) filter (_.nonEmpty)
+    def toInstructions: Seq[String] = s.split("\n") map (_.trim) filter (_.nonEmpty)
   }
-
 }

@@ -1,4 +1,4 @@
-class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, (Bot, Level.Value)]) {
+class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, OutputValue]) {
 
   def this() = this(Map(), Map())
 
@@ -18,7 +18,7 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, (Bot, Level.Value)
   def connectOutput(fromBotNumber: Int, outputNumber: Int, level: Level.Value): BotGraph = {
     val fromBot = getBot(fromBotNumber)
     val newBotMap = botMap.updated(fromBotNumber, fromBot)
-    val newOutputMap = outputMap.updated(outputNumber, (fromBot, level))
+    val newOutputMap = outputMap.updated(outputNumber, OutputValue(fromBotNumber, level))
     new BotGraph(newBotMap, newOutputMap)
   }
 
@@ -29,4 +29,6 @@ class BotGraph(val botMap: Map[Int, Bot], outputMap: Map[Int, (Bot, Level.Value)
       case (bn, b) if b.high(this) == high && b.low(this) == low => bn
     }
   }
+
+  def getOutputValue(outputNumber: Int): Option[Int] = outputMap.get(outputNumber) flatMap (_.value(this))
 }

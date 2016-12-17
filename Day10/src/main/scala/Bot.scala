@@ -1,26 +1,5 @@
 import Level._
 
-trait Value {
-  def value(botGraph: BotGraph): Option[Int]
-}
-
-case class LiteralValue(v: Int) extends Value {
-  def value(botGraph: BotGraph): Option[Int] = Some(v)
-  override def toString: String = s"LiteralValue($v)"
-}
-
-case class BotValue(fromBotNumber: Int, level: Level.Value) extends Value {
-  private var cachedValue: Option[Int] = None
-  def value(botGraph: BotGraph): Option[Int] =
-    cachedValue match {
-      case Some(_) => cachedValue
-      case None =>
-        cachedValue = botGraph.getBot(fromBotNumber).value(botGraph, level)
-        cachedValue
-    }
-  override def toString: String = s"BotValue($fromBotNumber, $level)"
-}
-
 class Bot(val botNumber: Int, val values: Seq[Value]) {
   def this(botNumber: Int) = this(botNumber, Seq())
   def low(botGraph: BotGraph): Option[Int] = evaluate(botGraph, Low)
