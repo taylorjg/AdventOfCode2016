@@ -5,7 +5,7 @@ object BalanceBots {
   def processInstructions(instructions: Seq[String]): BotGraph = {
     val (xs, ys) = instructions partition (SetValueRegex.pattern.matcher(_).matches)
     val botGraph1 = xs.foldLeft(new BotGraph)(processSetValueInstruction)
-    val botGraph2 = ys.foldLeft(botGraph1)(processConnectLowHighInstruction)
+    val botGraph2 = ys.foldLeft(botGraph1)(processConnectBotsInstruction)
     botGraph2
   }
 
@@ -16,8 +16,8 @@ object BalanceBots {
     botGraph.setValue(botNumber, value)
   }
 
-  private def processConnectLowHighInstruction(botGraph: BotGraph, instruction: String): BotGraph = {
-    val m = ConnectLowHighRegex.findAllIn(instruction)
+  private def processConnectBotsInstruction(botGraph: BotGraph, instruction: String): BotGraph = {
+    val m = ConnectBotsRegex.findAllIn(instruction)
     val fromBotNumber = m.group(1).toInt
     val lowTo = m.group(2)
     val highTo = m.group(3)
@@ -42,6 +42,6 @@ object BalanceBots {
   private def extractNumberFrom(s: String): Int = NumberRegex.findAllIn(s).group(1).toInt
 
   private final val SetValueRegex = """value (\d+) goes to bot (\d+)""".r
-  private final val ConnectLowHighRegex = """bot (\d+) gives low to (.+) and high to (.+)""".r
+  private final val ConnectBotsRegex = """bot (\d+) gives low to (.+) and high to (.+)""".r
   private final val NumberRegex = """.+ (\d+)""".r
 }
