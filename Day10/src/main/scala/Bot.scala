@@ -9,11 +9,11 @@ class Bot(val botNumber: Int, val values: Seq[Value]) {
       case Low => low(botGraph)
       case High => high(botGraph)
     }
-  def addValue(fromBotNumber: Int, level: Level.Value): Bot = {
+  def connectTo(fromBotNumber: Int, level: Level.Value): Bot = {
     if (values.size == 2) throw new Exception(s"Attempt to add $level value to completed bot $botNumber")
     else new Bot(botNumber, BotValue(fromBotNumber, level) +: values)
   }
-  def addValue(value: Int): Bot = {
+  def setValue(value: Int): Bot = {
     new Bot(botNumber, LiteralValue(value) +: values)
   }
   private def evaluate(botGraph: BotGraph, level: Level.Value): Option[Int] = {
