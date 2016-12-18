@@ -54,3 +54,7 @@ lazy val day11 = project.in(file("Day11"))
 lazy val day12 = project.in(file("Day12"))
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= commonDependencies)
+
+lazy val day13 = project.in(file("Day13"))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= commonDependencies)
