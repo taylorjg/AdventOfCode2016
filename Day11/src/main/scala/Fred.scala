@@ -3,29 +3,63 @@ object Fred {
   private type Floor = Int
   private type Generator = String
   private type Microchip = String
-  private type FloorsToGenerators = Map[Floor, Seq[Generator]]
-  private type FloorsToMicrochips= Map[Floor, Seq[Microchip]]
-  private type FloorContents = (Floor, Seq[Generator], Seq[Microchip])
-
-  // Commands:
-  // ElavatorUp(numFloors, Seq[Generator], Seq[Microchip])
-  // ElavatorDown(numFloors, Seq[Generator], Seq[Microchip])
+  private type FloorsToGenerators = Map[Floor, Set[Generator]]
+  private type FloorsToMicrochips= Map[Floor, Set[Microchip]]
+  private type FloorContents = (Floor, Set[Generator], Set[Microchip])
 
   // Rules:
   // Elevator must contain 1G or 1M or 2G or 2M or 1G+1M
-  // ???
+  // Each M must be either connected to it's own G or must not be on the same floor as another G
+  // The elevator stops at each floor when travelling and the rules must also hold for these intermediate steps too
 
-  private case class State(elevatorFloor: Floor,
-                           m1: FloorsToGenerators,
-                           m2: FloorsToMicrochips)
+  case class State(elevatorFloor: Floor,
+                   gsMap: FloorsToGenerators,
+                   msMap: FloorsToMicrochips)
+
+  case class Command(numFloors: Int, oldState: State, newState: State)
+
+  private def createCommand(oldState: State,
+                            fromFloor: Int,
+                            toFloor: Int,
+                            gs: Set[Generator],
+                            ms: Set[Microchip]): Command = {
+    val gsOnFromFloor = oldState.gsMap(fromFloor) -- gs
+    val gsOnToFloor = oldState.gsMap(toFloor) ++ gs
+    val gsMapUpdated = oldState.gsMap.updated(fromFloor, gsOnFromFloor).updated(toFloor, gsOnToFloor)
+    val msOnFromFloor = oldState.msMap(fromFloor) -- ms
+    val msOnToFloor = oldState.msMap(toFloor) ++ ms
+    val msMapUpdated = oldState.msMap.updated(fromFloor, msOnFromFloor).updated(toFloor, msOnToFloor)
+    val newState = State(toFloor, gsMapUpdated, msMapUpdated)
+    val numFloors = Math.abs(toFloor - fromFloor)
+    Command(numFloors, oldState, newState)
+  }
 
   def process(arrangement: Seq[String]): Int = {
+
     val parsedLines = arrangement map parseLine
     val initialState = State(1, makeGeneratorsMap(parsedLines), makeMicrochipsMap(parsedLines))
     println(s"initialState: $initialState")
-    // Calculate all possible legal sequences of commands that result in all items residing on the 4th floor
-    // Find the sequence with the minimum number of steps (i.e. sum of numFloors)
-    -1
+
+    val css = generateCommandSequences(initialState)
+    val lengths = css map (cs => (cs map (_.numFloors)).sum)
+    lengths.min
+  }
+
+  // Calculate all possible legal sequences of commands that result in all items residing on the 4th floor
+  // We need to avoid cycles i.e. a command that would lead to a state that has already been seen in the sequence
+  // Ideally, we want to favour commands that move stuff upwards
+  def generateCommandSequences(initialState: State): Seq[Seq[Command]] = {
+    // starting point ?
+    // - choose a combination of 2 things on a floor
+    // - choose a destination floor
+    // - check whether the move would be legal
+    // - if ok then
+    // - build a tree of possibilities ?
+    // - top of tree is a command
+    // - branching from this are further commands
+    // - then each of those has further commands
+    // - etc.
+    Seq()
   }
 
   private def parseLine(s: String): FloorContents = {
@@ -47,7 +81,7 @@ object Fred {
   private def parseLineContents1(s: String): FloorContents = {
     val m = FloorContains1Regex.findAllIn(s)
     val floorName = m.group(1)
-    val (gs, ms) = parseThing(m.group(2))
+    val (gs, ms) = parseThings(m.group(2))
     (FloorNames(floorName), gs, ms)
   }
 
@@ -75,27 +109,27 @@ object Fred {
   private def parseNothingRelevant(s: String): FloorContents = {
     val m = FloorNothingRelevantRegex.findAllIn(s)
     val floorName = m.group(1)
-    (FloorNames(floorName), Seq(), Seq())
+    (FloorNames(floorName), Set(), Set())
   }
 
-  private def parseThings(things: String*): (Seq[Generator], Seq[Microchip]) =
-    things.foldLeft((Seq[Generator](), Seq[Microchip]()))((acc, thing) => {
+  private def parseThings(things: String*): (Set[Generator], Set[Microchip]) =
+    things.foldLeft((Set[Generator](), Set[Microchip]()))((acc, thing) => {
       val (gs, ms) = parseThing(thing)
       (acc._1 ++ gs, acc._2 ++ ms)
     })
 
-  private def parseThing(thing: String): (Seq[Generator], Seq[Microchip]) = {
+  private def parseThing(thing: String): (Option[Generator], Option[Microchip]) = {
     val b1 = GeneratorRegex.pattern.matcher(thing).matches
     val b2 = MicrochipRegex.pattern.matcher(thing).matches
     (b1, b2) match {
       case (true, false) =>
         val m = GeneratorRegex.findAllIn(thing)
         val generator = m.group(1)
-        (Seq(generator), Seq())
+        (Some(generator), None)
       case (false, true) =>
         val m = MicrochipRegex.findAllIn(thing)
         val microchip = m.group(1)
-        (Seq(), Seq(microchip))
+        (None, Some(microchip))
       case _ => throw new Exception(s"""Bad input, "$thing".""")
     }
   }
