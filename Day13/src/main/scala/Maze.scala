@@ -14,7 +14,7 @@ class Maze(seed: Int) {
 
   // https://en.wikipedia.org/wiki/A*_search_algorithm
   // http://web.mit.edu/eranki/www/tutorials/search/
-  def bestPathLength(start: Location, goal: Location): Int = {
+  def bestPathLength(start: Location, goal: Location): Option[Int] = {
 
     case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
       val f = g + h
@@ -47,19 +47,21 @@ class Maze(seed: Int) {
         distance(neighbourLocation, goal))
 
     @annotation.tailrec
-    def aStar(openSet: Set[Node], closedSet: Set[Node]): Node = {
-      if (openSet.isEmpty) throw new Exception("Oh dear - we have failed to find a path!")
-      val current = openSet.minBy(_.f)
-      val newOpenSet = openSet - current
-      val newClosedSet = closedSet + current
-      if (current.location == goal) current
+    def aStar(openSet: Set[Node], closedSet: Set[Node]): Option[Node] = {
+      if (openSet.isEmpty) None
       else {
-        val neighbourLocations = getOpenSpaceNeighbours(current.location)
-        val neighbourNodes = neighbourLocations map makeNeighbourNode(current)
-        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
-        val filteredNeighbourNodes = neighbourNodes filter (nn =>
-          !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
-        aStar(newOpenSet ++ filteredNeighbourNodes, newClosedSet)
+        val current = openSet.minBy(_.f)
+        val newOpenSet = openSet - current
+        val newClosedSet = closedSet + current
+        if (current.location == goal) Some(current)
+        else {
+          val neighbourLocations = getOpenSpaceNeighbours(current.location)
+          val neighbourNodes = neighbourLocations map makeNeighbourNode(current)
+          def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
+          val filteredNeighbourNodes = neighbourNodes filter (nn =>
+            !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
+          aStar(newOpenSet ++ filteredNeighbourNodes, newClosedSet)
+        }
       }
     }
 
@@ -75,7 +77,7 @@ class Maze(seed: Int) {
 
     val startNode = Node(start, None, 0, 0)
     val winningNode = aStar(openSet = Set(startNode), closedSet = Set())
-    pathLength(winningNode)
+    winningNode map pathLength
   }
 
   private def isEven(v: Int): Boolean = v % 2 == 0
