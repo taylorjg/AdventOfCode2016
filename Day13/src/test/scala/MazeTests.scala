@@ -18,9 +18,14 @@ class MazeTests extends FlatSpec {
     val cubicles = for {
       y <- 0 to 6
       x <- 0 to 9
-      location = (x, y)
-    } yield maze.getLocation(location)
+    } yield maze.locationToCubicle(Location(x, y))
     val actual = Maze.cubiclesToStrings(cubicles, 10).toArray
     assert(actual sameElements expected)
+  }
+
+  "(1,1) to (7,4)" should "take 11 steps" in {
+    val seed = 10
+    val maze = new Maze(seed)
+    assert(maze.path(Location(1, 1), Location(7, 4)).length == 11)
   }
 }
