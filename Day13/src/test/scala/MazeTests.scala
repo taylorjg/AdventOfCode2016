@@ -26,6 +26,6 @@ class MazeTests extends FlatSpec {
   "(1,1) to (7,4)" should "take 11 steps" in {
     val seed = 10
     val maze = new Maze(seed)
-    assert(maze.path(Location(1, 1), Location(7, 4)).length == 11)
+    assert(maze.bestPathPength(Location(1, 1), Location(7, 4)) == 11)
   }
 }

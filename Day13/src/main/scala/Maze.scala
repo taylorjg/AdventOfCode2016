@@ -14,7 +14,7 @@ class Maze(seed: Int) {
 
   // https://en.wikipedia.org/wiki/A*_search_algorithm
   // http://web.mit.edu/eranki/www/tutorials/search/
-  def path(start: Location, goal: Location): Seq[Step] = {
+  def bestPathPength(start: Location, goal: Location): Int = {
 
     case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
       val f = g + h
@@ -48,9 +48,7 @@ class Maze(seed: Int) {
 
     @annotation.tailrec
     def aStar(openSet: Set[Node], closedSet: Set[Node]): Node = {
-
-      if (openSet.isEmpty) throw new Exception("BOOM") // or make return type Option[Node] and return None
-
+      if (openSet.isEmpty) throw new Exception("Oh dear - we have failed to find a path!")
       val current = openSet.minBy(_.f)
       val newOpenSet = openSet - current
       val newClosedSet = closedSet + current
@@ -65,11 +63,19 @@ class Maze(seed: Int) {
       }
     }
 
+    def pathLength(node: Node): Int = {
+      @annotation.tailrec
+      def loop(n: Node, acc: Int): Int =
+        n.parent match {
+          case Some(child) => loop(child, acc + 1)
+          case None => acc
+        }
+      loop(node, 0)
+    }
+
     val startNode = Node(start, None, 0, 0)
     val winningNode = aStar(openSet = Set(startNode), closedSet = Set())
-    println(s"winningNode: $winningNode")
-
-    Seq()
+    pathLength(winningNode)
   }
 
   private def isEven(v: Int): Boolean = v % 2 == 0
