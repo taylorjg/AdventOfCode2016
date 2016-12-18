@@ -15,3 +15,4 @@
 * ~~[Day 11: Radioisotope Thermoelectric Generators](http://adventofcode.com/2016/day/11)~~ _(I have put this evil bugger on hold)_
 * [Day 12: Leonardo's Monorail](http://adventofcode.com/2016/day/12)
 * [Day 13: A Maze of Twisty Little Cubicles](http://adventofcode.com/2016/day/13)
+* [Day 14: One-Time Pad](http://adventofcode.com/2016/day/14)
