@@ -2,7 +2,7 @@ import CubicleType._
 
 class Maze(seed: Int) {
 
-  def locationToCubicleType(location: Location): CubicleType.Value = {
+  def cubicleType(location: Location): CubicleType.Value = {
     val x = location.x
     val y = location.y
     val value = (x * x) + (3 * x) + (2 * x * y) + y + (y * y)
@@ -30,12 +30,11 @@ class Maze(seed: Int) {
       val x1 = location.x
       val y1 = location.y
       for {
-        (dx, dy) <- Seq((0, 1), (0, -1), (1, 0), (-1, 0))
-        x2 = x1 + dx
-        y2 = y1 + dy
+        (dx, dy) <- Seq((0, 1), (0, -1), (-1, 0), (1, 0))
+        (x2, y2) = (x1 + dx, y1 + dy)
         if x2 >= 0 && y2 >= 0
         neighbour = Location(x2, y2)
-        if locationToCubicleType(neighbour) == OpenSpace
+        if cubicleType(neighbour) == OpenSpace
       } yield neighbour
     }
 

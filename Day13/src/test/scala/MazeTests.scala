@@ -18,7 +18,7 @@ class MazeTests extends FlatSpec {
     val cubicles = for {
       y <- 0 to 6
       x <- 0 to 9
-    } yield maze.locationToCubicleType(Location(x, y))
+    } yield maze.cubicleType(Location(x, y))
     val actual = Maze.cubicleTypesToStrings(cubicles, 10).toArray
     assert(actual sameElements expected)
   }
