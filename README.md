@@ -12,5 +12,6 @@
 * [Day 8: Two-Factor Authentication](http://adventofcode.com/2016/day/8)
 * [Day 9: Explosives in Cyberspace](http://adventofcode.com/2016/day/9)
 * [Day 10: Balance Bots](http://adventofcode.com/2016/day/10)
+* ~~[Day 11: Radioisotope Thermoelectric Generators](http://adventofcode.com/2016/day/11)~~ _(I have put this evil bugger on hold)_
 * [Day 12: Leonardo's Monorail](http://adventofcode.com/2016/day/12)
 * [Day 13: A Maze of Twisty Little Cubicles](http://adventofcode.com/2016/day/13)
