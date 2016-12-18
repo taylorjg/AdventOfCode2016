@@ -2,7 +2,7 @@ import scala.util.Try
 
 object Assembunny {
 
-  def execute(code: Vector[String]): Registers = {
+  def execute(code: Vector[String], rs: Register*): Registers = {
     @annotation.tailrec
     def loop(registers: Registers, index: Int): Registers =
       if (index >= code.length) registers
@@ -11,7 +11,8 @@ object Assembunny {
         val newIndex = jumpIndex.getOrElse(index + 1)
         loop(newRegisters, newIndex)
       }
-    loop(new Registers(), 0)
+    val initialRegisters = new Registers(new Registers().map ++ (rs map (r => (r.name, r))))
+    loop(initialRegisters, 0)
   }
 
   private def executeCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
