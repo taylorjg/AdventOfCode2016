@@ -14,7 +14,7 @@ class Maze(seed: Int) {
 
   // https://en.wikipedia.org/wiki/A*_search_algorithm
   // http://web.mit.edu/eranki/www/tutorials/search/
-  def bestPathPength(start: Location, goal: Location): Int = {
+  def bestPathLength(start: Location, goal: Location): Int = {
 
     case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
       val f = g + h
