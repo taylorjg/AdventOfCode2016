@@ -16,7 +16,7 @@ class Maze(seed: Int) {
   // http://web.mit.edu/eranki/www/tutorials/search/
   def path(start: Location, goal: Location): Seq[Step] = {
 
-    private case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
+    case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
       val f = g + h
     }
 
@@ -30,13 +30,11 @@ class Maze(seed: Int) {
       val x1 = location.x
       val y1 = location.y
       for {
-        dx <- -1 to 1
-        dy <- -1 to 1
+        (dx, dy) <- Seq((0, 1), (0, -1), (1, 0), (-1, 0))
         x2 = x1 + dx
         y2 = y1 + dy
         if x2 >= 0 && y2 >= 0
         neighbour = Location(x2, y2)
-        if neighbour != location
         if locationToCubicle(neighbour).value == OpenSpace
       } yield neighbour
     }
@@ -60,8 +58,9 @@ class Maze(seed: Int) {
       else {
         val neighbourLocations = getOpenSpaceNeighbours(current.location)
         val neighbourNodes = neighbourLocations map makeNeighbourNode(current)
+        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
         val filteredNeighbourNodes = neighbourNodes filter (nn =>
-          !newOpenSet.exists(n => ???) && !newClosedSet.exists(n => ???))
+          !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
         aStar(newOpenSet ++ filteredNeighbourNodes, newClosedSet)
       }
     }
