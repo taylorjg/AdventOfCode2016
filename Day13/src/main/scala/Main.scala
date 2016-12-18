@@ -12,7 +12,7 @@ object Main {
       x <- 0 to 49
       y <- 0 to 49
       location = Location(x, y)
-      if maze.locationToCubicle(location).value == CubicleType.OpenSpace
+      if maze.locationToCubicleType(location) == CubicleType.OpenSpace
     } yield location).flatMap(maze.bestPathLength(startingPoint, _)) count (_ <= 50)
     println(s"answer2: $answer2")
   }

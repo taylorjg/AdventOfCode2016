@@ -2,14 +2,14 @@ import CubicleType._
 
 class Maze(seed: Int) {
 
-  def locationToCubicle(location: Location): Cubicle = {
+  def locationToCubicleType(location: Location): CubicleType.Value = {
     val x = location.x
     val y = location.y
-    val v1 = (x * x) + (3 * x) + (2 * x * y) + y + (y * y)
-    val v2 = v1 + seed
-    val v3 = v2.toBinaryString
-    val numOnes = v3 count (_ == '1')
-    Cubicle(if (isEven(numOnes)) OpenSpace else Wall)
+    val value = (x * x) + (3 * x) + (2 * x * y) + y + (y * y)
+    val valuePlusSeed = value + seed
+    val binaryString = valuePlusSeed.toBinaryString
+    val numOnes = binaryString count (_ == '1')
+    if (isEven(numOnes)) OpenSpace else Wall
   }
 
   // https://en.wikipedia.org/wiki/A*_search_algorithm
@@ -35,7 +35,7 @@ class Maze(seed: Int) {
         y2 = y1 + dy
         if x2 >= 0 && y2 >= 0
         neighbour = Location(x2, y2)
-        if locationToCubicle(neighbour).value == OpenSpace
+        if locationToCubicleType(neighbour) == OpenSpace
       } yield neighbour
     }
 
@@ -84,9 +84,9 @@ class Maze(seed: Int) {
 }
 
 object Maze {
-  def cubiclesToStrings(cubicles: Seq[Cubicle], width: Int): Seq[String] =
-    (cubicles collect {
-      case c if c.value == Wall => "#"
-      case c if c.value == OpenSpace => "."
+  def cubicleTypesToStrings(cubicleTypes: Seq[CubicleType.Value], width: Int): Seq[String] =
+    (cubicleTypes collect {
+      case ct if ct == Wall => "#"
+      case ct if ct == OpenSpace => "."
     }).mkString.grouped(width).toList
 }
