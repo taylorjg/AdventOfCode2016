@@ -34,27 +34,25 @@ object OneTimePad {
 
     @annotation.tailrec
     def loop(index: Int, nth: Int, cache: Cache): Int = {
-      if (nth == 65) index - 1
-      else {
-        val (hash, updatedCache1) = cache.get(index) match {
-          case Some(h) =>
-            (h, cache - index)
-          case None =>
-            val h = calculateHash(salt, index, hashType)
-            (h, cache + (index -> h))
-        }
-        findXxx(hash) match {
-          case Some(xxx) =>
-            findXxxxx(xxx.head, index + 1, index + 1000, updatedCache1) match {
-              case (Some(_), updatedCache2) => {
-                println(s"Found key $nth")
-                loop(index + 1, nth + 1, updatedCache2)
-              }
-              case (None, updatedCache2) => loop(index + 1, nth, updatedCache2)
+      val (hash, updatedCache1) = cache.get(index) match {
+        case Some(h) =>
+          (h, cache - index)
+        case None =>
+          val h = calculateHash(salt, index, hashType)
+          (h, cache + (index -> h))
+      }
+      findXxx(hash) match {
+        case Some(xxx) =>
+          findXxxxx(xxx.head, index + 1, index + 1000, updatedCache1) match {
+            case (Some(_), updatedCache2) => {
+              println(s"Found key $nth at $index")
+              if (nth == 64) index
+              else loop(index + 1, nth + 1, updatedCache2)
             }
-          case None =>
-            loop(index + 1, nth, updatedCache1)
-        }
+            case (None, updatedCache2) => loop(index + 1, nth, updatedCache2)
+          }
+        case None =>
+          loop(index + 1, nth, updatedCache1)
       }
     }
 
