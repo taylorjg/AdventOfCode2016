@@ -1,3 +1,5 @@
+import HashType._
+
 object OneTimePad {
 
   def findIndex(salt: String, hashType: HashType.Value): Int = {
@@ -12,10 +14,10 @@ object OneTimePad {
       else None
     }
 
-    def findXxxxx(x: Char, fromIndex: Int, toIndex: Int, initialCache: Cache): (Option[Int], Cache) = {
+    def findXxxxx(x: Char, fromIndex: Int, toIndex: Int, initialCache: Cache): (Option[Int], Option[String], Cache) = {
       @annotation.tailrec
-      def loop(index: Int, cache: Cache): (Option[Int], Cache) = {
-        if (index == toIndex) (None, cache)
+      def loop(index: Int, cache: Cache): (Option[Int], Option[String], Cache) = {
+        if (index > toIndex) (None, None, cache)
         else {
           val (hash, updatedCache) = cache.get(index) match {
             case Some(h) =>
@@ -25,7 +27,7 @@ object OneTimePad {
               (h, cache + (index -> h))
           }
           val r = s".*($x)\\1{4}.*".r
-          if (r.pattern.matcher(hash).matches()) (Some(index), updatedCache)
+          if (r.pattern.matcher(hash).matches()) (Some(index), Some(hash), updatedCache)
           else loop(index + 1, updatedCache)
         }
       }
@@ -33,37 +35,45 @@ object OneTimePad {
     }
 
     @annotation.tailrec
-    def loop(index: Int, nth: Int, cache: Cache): Int = {
+    def loop(index: Int, keys: List[String], cache: Cache): Int = {
       val (hash, updatedCache1) = cache.get(index) match {
         case Some(h) =>
           (h, cache - index)
         case None =>
           val h = calculateHash(salt, index, hashType)
-          (h, cache + (index -> h))
+          (h, cache)
       }
       findXxx(hash) match {
         case Some(xxx) =>
           findXxxxx(xxx.head, index + 1, index + 1000, updatedCache1) match {
-            case (Some(_), updatedCache2) => {
-              println(s"Found key $nth at $index")
-              if (nth == 64) index
-              else loop(index + 1, nth + 1, updatedCache2)
-            }
-            case (None, updatedCache2) => loop(index + 1, nth, updatedCache2)
+            case (Some(index5), Some(hash5), updatedCache2) =>
+              val newKeys = keys :+ hash
+              val numKeys = newKeys.length
+              println(s"Found key number $numKeys $hash/$index, $hash5/$index5")
+              if (numKeys == 64) index
+              else loop(index + 1, newKeys, updatedCache2)
+            case (None, None, updatedCache2) => loop(index + 1, keys, updatedCache2)
+            case _ => throw new Exception("BOOM")
           }
         case None =>
-          loop(index + 1, nth, updatedCache1)
+          loop(index + 1, keys, updatedCache1)
       }
     }
 
-    loop(0, 0, Map.empty)
+    loop(0, List(), Map())
   }
 
-  private final val XxxRegex = """.*([a-z0-9])\1{2}.*""".r
+  private final val XxxRegex = """.*?([a-z0-9])\1{2}.*""".r
   private final val MessageDigest = java.security.MessageDigest.getInstance("MD5")
 
-  private def calculateHash(salt: String, index: Int, hashType: HashType.Value): String = {
-    val bytes = s"$salt$index".getBytes("UTF-8")
+  def calculateHash(salt: String, index: Int, hashType: HashType.Value): String = {
+    val initialHash = calculateHash(s"$salt$index")
+    val additionalHashCount = if (hashType == Normal) 0 else 2016
+    (1 to additionalHashCount).foldLeft(initialHash)((acc, _) => calculateHash(acc))
+  }
+
+  private def calculateHash(s: String): String = {
+    val bytes = s.getBytes("UTF-8")
     MessageDigest.update(bytes, 0, bytes.length)
     MessageDigest.digest().map(0xFF & _).map("%02x".format(_)).mkString
   }
