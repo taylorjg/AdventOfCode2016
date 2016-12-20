@@ -5,9 +5,8 @@ class Maze(seed: Int) {
   def cubicleType(location: Location): CubicleType.Value = {
     val x = location.x
     val y = location.y
-    val value = (x * x) + (3 * x) + (2 * x * y) + y + (y * y)
-    val valuePlusSeed = value + seed
-    val binaryString = valuePlusSeed.toBinaryString
+    val v = (x*x + 3*x + 2*x*y + y + y*y) + seed
+    val binaryString = v.toBinaryString
     val numOnes = binaryString count (_ == '1')
     if (isEven(numOnes)) OpenSpace else Wall
   }
@@ -21,9 +20,9 @@ class Maze(seed: Int) {
     }
 
     def distance(l1: Location, l2: Location): Double = {
-      val x = l1.x - l2.x
-      val y = l1.y - l2.y
-      Math.hypot(x, y)
+      val dx = l1.x - l2.x
+      val dy = l1.y - l2.y
+      Math.hypot(dx, dy)
     }
 
     def getOpenSpaceNeighbours(location: Location): Seq[Location] = {

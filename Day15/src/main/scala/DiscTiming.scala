@@ -3,6 +3,7 @@ object DiscTiming {
   def firstTime(discs: Seq[Disc]): Int = {
     def discPositionsAtTime(t: Int): Seq[Int] =
       discs map { case Disc(dn, np, sp) => (dn + t + sp) % np }
+    @annotation.tailrec
     def loop(t: Int): Int = {
       val discPositions = discPositionsAtTime(t)
       if (discPositions forall (_ == 0)) t
