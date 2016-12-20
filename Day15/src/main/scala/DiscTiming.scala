@@ -1,7 +1,14 @@
 object DiscTiming {
 
   def firstTime(discs: Seq[Disc]): Int = {
-    discs.length
+    def discPositionsAtTime(t: Int): Seq[Int] =
+      discs map { case Disc(dn, np, sp) => (dn + t + sp) % np }
+    def loop(t: Int): Int = {
+      val discPositions = discPositionsAtTime(t)
+      if (discPositions forall (_ == 0)) t
+      else loop(t + 1)
+    }
+    loop(0)
   }
 
   def parseDiscs(lines: Seq[String]): Seq[Disc] = {
