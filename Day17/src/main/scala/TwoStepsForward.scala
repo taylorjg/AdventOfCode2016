@@ -1,6 +1,17 @@
 object TwoStepsForward {
 
-  def shortestPath(passcode: String): Option[String] = {
+  private object PathType extends Enumeration {
+    val Shortest, Longest = Value
+  }
+  import PathType._
+
+  def shortestPath(passcode: String): Option[String] =
+    findPath(passcode, Shortest)
+
+  def longestPathNumSteps(passcode: String): Option[Int] =
+    findPath(passcode, Longest) map (_.length)
+
+  private def findPath(passcode: String, pathType: PathType.Value): Option[String] = {
 
     val start = Location(0, 0)
     val goal = Location(3, 3)
@@ -72,27 +83,26 @@ object TwoStepsForward {
     }
 
     @annotation.tailrec
-    def aStar(openSet: Set[Node], closedSet: Set[Node]): Option[Node] = {
-      if (openSet.isEmpty) None
+    def aStar(openSet: Set[Node], closedSet: Set[Node], lastKnownGood: Option[Node]): Option[Node] = {
+      if (openSet.isEmpty) lastKnownGood
       else {
         val current = openSet.minBy(_.f)
         val newOpenSet = openSet - current
         val newClosedSet = closedSet + current
-        if (current.location == goal) Some(current)
+        if (current.location == goal) {
+          if (pathType == Shortest) Some(current)
+          else aStar(newOpenSet, newClosedSet, Some(current))
+        }
         else {
           val neighbourLocations = getNeighboursWithOpenDoors(current)
           val neighbourNodes = neighbourLocations map makeNeighbourNode(current)
-          def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
-          // Deliberately don't consider the closed set because we want to keep re-evaluating
-          // locations as they will behave different each time we try them.
-          val filteredNeighbourNodes = neighbourNodes filter (nn => !newOpenSet.exists(betterNode(nn)))
-          aStar(newOpenSet ++ filteredNeighbourNodes, newClosedSet)
+          aStar(newOpenSet ++ neighbourNodes, newClosedSet, lastKnownGood)
         }
       }
     }
 
     val startNode = Node(start, None, 0, 0)
-    val winningNode = aStar(openSet = Set(startNode), closedSet = Set())
+    val winningNode = aStar(openSet = Set(startNode), closedSet = Set(), lastKnownGood = None)
     winningNode map nodeToPath
   }
 
