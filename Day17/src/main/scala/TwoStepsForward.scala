@@ -18,25 +18,26 @@ object TwoStepsForward {
     def getNeighboursWithOpenDoors(node: Node): Seq[Location] = {
       val currentPath = nodeToPath(node)
       val hash = calculateHash(passcode, currentPath)
-      val offsets = hashToOffsets(hash)
+      val directionsAndOffsets = hashToDirectionsAndOffsets(hash)
+      val offsets = directionsAndOffsets map (_._2)
       val x1 = node.location.x
       val y1 = node.location.y
       for {
         (dx, dy) <- offsets
         (x2, y2) = (x1 + dx, y1 + dy)
-        if x2 >= 0 && y2 >= 0
+        if x2 >= 0 && y2 >= 0 && x2 < 4 && y2 < 4
         neighbour = Location(x2, y2)
       } yield neighbour
     }
 
-    def hashToOffsets(hash: String): Seq[(Int, Int)] = {
-      def charToLocation(l: (Int, Int), c: Char): Option[(Int, Int)] =
-        Some(l).filter(_ => c >= 'b' && c <= 'f')
+    def hashToDirectionsAndOffsets(hash: String): Seq[(String, (Int, Int))] = {
+      def charToLocation(d: String, o: (Int, Int), c: Char): Option[(String, (Int, Int))] =
+        Some((d, o)).filter(_ => c >= 'b' && c <= 'f')
       Seq(
-        charToLocation((0, -1), hash(0)),
-        charToLocation((0, 1), hash(1)),
-        charToLocation((-1, 0), hash(2)),
-        charToLocation((1, 0), hash(3))).flatten
+        charToLocation("U", (0, -1), hash(0)),
+        charToLocation("D", (0, 1), hash(1)),
+        charToLocation("L", (-1, 0), hash(2)),
+        charToLocation("R", (1, 0), hash(3))).flatten
     }
 
     def makeNeighbourNode(parent: Node)(neighbourLocation: Location): Node =
@@ -82,8 +83,9 @@ object TwoStepsForward {
           val neighbourLocations = getNeighboursWithOpenDoors(current)
           val neighbourNodes = neighbourLocations map makeNeighbourNode(current)
           def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
-          val filteredNeighbourNodes = neighbourNodes filter (nn =>
-            !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
+          // Deliberately don't consider the closed set because we want to keep re-evaluating
+          // locations as they will behave different each time we try them.
+          val filteredNeighbourNodes = neighbourNodes filter (nn => !newOpenSet.exists(betterNode(nn)))
           aStar(newOpenSet ++ filteredNeighbourNodes, newClosedSet)
         }
       }
