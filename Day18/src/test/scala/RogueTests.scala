@@ -14,9 +14,6 @@ class RogueTests extends FlatSpec {
   }
 
   "given example 2" should "contain 38 safe tiles in the first 10 rows" in {
-    val rows = Rogue.getRows(".^^.^.^^^^", 10)
-    val flattenedRows = rows.flatten
-    val actual = flattenedRows count (_ == '.')
-    assert(actual == 38)
+    assert(Rogue.getNumSafeTiles(".^^.^.^^^^", 10) == 38)
   }
 }
