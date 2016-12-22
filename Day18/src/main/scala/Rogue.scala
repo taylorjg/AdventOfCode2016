@@ -1,21 +1,20 @@
 object Rogue {
 
   def getRows(firstRow: String, numRows: Int): Seq[String] =
-    (2 to numRows).foldLeft(List(firstRow))((acc, _) => nextRow(acc.head) :: acc).reverse
+    (2 to numRows).foldLeft(List(firstRow))((acc, _) => makeNextRow(acc.head) :: acc).reverse
 
   def getNumSafeTiles(firstRow: String, numRows: Int): Int = {
     def numSafe(row: String): Int = row.count(_ == Safe)
     val seed = (firstRow, numSafe(firstRow))
-    val result = (2 to numRows).foldLeft(seed)((acc, _) => {
+    val finalAcc = (2 to numRows).foldLeft(seed)((acc, _) => {
       val (previousRow, total) = acc
-      val newRow = nextRow(previousRow)
-      val newTotal = total + numSafe(newRow)
-      (newRow, newTotal)
+      val nextRow = makeNextRow(previousRow)
+      (nextRow, numSafe(nextRow) + total)
     })
-    result._2
+    finalAcc._2
   }
 
-  private def nextRow(previousRow: String): String = {
+  private def makeNextRow(previousRow: String): String = {
     def tileAt(pos: Int): Char = if (previousRow.isDefinedAt(pos)) previousRow(pos) else Safe
     def applyRules(pos: Int): Char = {
       val left = tileAt(pos - 1)
