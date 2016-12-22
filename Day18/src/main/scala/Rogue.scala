@@ -7,9 +7,9 @@ object Rogue {
     def numSafe(row: String): Int = row.count(_ == Safe)
     val seed = (firstRow, numSafe(firstRow))
     val finalAcc = (2 to numRows).foldLeft(seed)((acc, _) => {
-      val (previousRow, total) = acc
+      val (previousRow, runningTotal) = acc
       val nextRow = makeNextRow(previousRow)
-      (nextRow, numSafe(nextRow) + total)
+      (nextRow, numSafe(nextRow) + runningTotal)
     })
     finalAcc._2
   }
