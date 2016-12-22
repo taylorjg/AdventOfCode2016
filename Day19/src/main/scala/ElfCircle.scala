@@ -1,19 +1,20 @@
+import scala.collection.mutable.ArrayBuffer
+
 object ElfCircle {
   def allPresentsGoTo(numElves: Int): Int = {
-    def nextElf(elf: Int): Int = (elf % numElves) + 1
-    val m = collection.mutable.Map((1 to numElves) map (n => (n, (1, nextElf(n)))): _*)
+    val arr = ArrayBuffer.tabulate(numElves)(n => (n + 1, 1))
     @annotation.tailrec
-    def loop(elf: Int): Int =
-      m collectFirst { case (k, v) if v._1 == numElves => k } match {
-        case Some(winningElf) => winningElf
+    def loop(elfIndex: Int): Int =
+      arr collectFirst { case (en, np) if np == numElves => en } match {
+        case Some(en) => en
         case None =>
-          val (a, b) = m(elf)
-          val (c, d) = m(b)
-          m(elf) = (a + c, d)
-          m -= b
-          println(s"elf: $elf; m(elf): ${m(elf)}")
-          loop(d)
+          val nextElfIndex = (elfIndex + 1) % arr.length
+          val (en, np1) = arr(elfIndex)
+          val (_, np2) = arr(nextElfIndex)
+          arr(elfIndex) = (en, np1 + np2)
+          arr.remove(nextElfIndex)
+          loop(nextElfIndex)
       }
-    loop(1)
+    loop(0)
   }
 }
