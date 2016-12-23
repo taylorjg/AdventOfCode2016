@@ -29,25 +29,17 @@ object ElfCircle {
   }
 
   def allPresentsGoToAcross1(numElves: Int): Int = {
-    val c = ArrayBuffer.tabulate(numElves)(idx => (idx + 1, 1))
+    val c = ArrayBuffer.tabulate(numElves)(idx => idx + 1)
 
     @annotation.tailrec
-    def loop(ei: Int): Int = {
-      // val xs = c.zipWithIndex
-      // println(s"xs: $xs; ei: $ei")
+    def loop(elfIndex: Int): Int = {
       val len = c.length
-      if (len % 10000 == 0 || len < 100) {
-        println(s"len: $len")
-      }
-      if (len == 1) c.head._1
+      if (len == 1) c.head
       else {
-        val (en, np1) = c(ei)
-        val aei = (ei + len / 2) % len
-        val (_, np2) = c(aei)
-        c(ei) = (en, np1 + np2)
-        val nextIndex = (ei + 1) % len
-        val nextIndexAdjusted = if (nextIndex == c.indices.last) ei else nextIndex
-        c.remove(aei)
+        val acrossIndex = (elfIndex + len / 2) % len
+        val nextIndex = (elfIndex + 1) % len
+        val nextIndexAdjusted = if (nextIndex > acrossIndex) nextIndex - 1 else nextIndex
+        c.remove(acrossIndex)
         loop(nextIndexAdjusted)
       }
     }
@@ -55,5 +47,3 @@ object ElfCircle {
     loop(0)
   }
 }
-
-// Wrong: 32283
