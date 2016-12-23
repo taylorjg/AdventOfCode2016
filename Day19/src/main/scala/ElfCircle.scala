@@ -33,6 +33,8 @@ object ElfCircle {
 
     @annotation.tailrec
     def loop(ei: Int): Int = {
+      // val xs = c.zipWithIndex
+      // println(s"xs: $xs; ei: $ei")
       val len = c.length
       if (len % 10000 == 0 || len < 100) {
         println(s"len: $len")
@@ -43,8 +45,10 @@ object ElfCircle {
         val aei = (ei + len / 2) % len
         val (_, np2) = c(aei)
         c(ei) = (en, np1 + np2)
+        val nextIndex = (ei + 1) % len
+        val nextIndexAdjusted = if (nextIndex == c.indices.last) ei else nextIndex
         c.remove(aei)
-        loop(if (ei >= c.indices.last) 0 else ei + 1)
+        loop(nextIndexAdjusted)
       }
     }
 

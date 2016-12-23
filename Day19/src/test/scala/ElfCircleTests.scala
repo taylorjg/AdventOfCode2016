@@ -16,4 +16,8 @@ class ElfCircleTests extends FlatSpec {
   "5 elves (across)" should "result in elf 2 having all the presents" in {
     assert(ElfCircle.allPresentsGoToAcross1(5) == 2)
   }
+
+  "6 elves (across)" should "result in elf 3 having all the presents" in {
+    assert(ElfCircle.allPresentsGoToAcross1(6) == 3)
+  }
 }
