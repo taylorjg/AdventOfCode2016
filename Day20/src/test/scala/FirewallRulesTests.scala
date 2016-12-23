@@ -10,6 +10,6 @@ class FirewallRulesTests extends FlatSpec {
       """.stripMargin
     val lines = input.split("\n") map (_.trim) filter (_.nonEmpty)
     val ranges = FirewallRules.parseLines(lines)
-    assert(FirewallRules.lowestValueNotBlocked(ranges) == 3)
+    assert(FirewallRules.lowestValueNotBlocked(ranges, 0L, 9L) == 3L)
   }
 }
