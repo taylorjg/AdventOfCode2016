@@ -1,7 +1,10 @@
+import scala.collection.mutable.ArrayBuffer
+
 object ElfCircle {
 
-  def allPresentsGoTo1(numElves: Int): Int = {
+  def allPresentsGoToLeft1(numElves: Int): Int = {
     val c = Array.tabulate(numElves)(idx => (idx + 1, 1, (idx + 1) % numElves))
+
     @annotation.tailrec
     def loop(ei: Int): Int =
       c collectFirst { case (en, np, _) if np == numElves => en } match {
@@ -12,14 +15,41 @@ object ElfCircle {
           c(ei) = (en, np1 + np2, nei2)
           loop(nei2)
       }
+
     loop(0)
   }
 
-  def allPresentsGoTo2(numElves: Int): Int = {
+  def allPresentsGoToLeft2(numElves: Int): Int = {
     @annotation.tailrec
     def loop(p: Int): Int = if (Math.pow(2, p) > numElves) p - 1 else loop(p + 1)
+
     val x = loop(0)
     val diff = numElves - Math.pow(2, x).toInt
     diff * 2 + 1
   }
+
+  def allPresentsGoToAcross1(numElves: Int): Int = {
+    val c = ArrayBuffer.tabulate(numElves)(idx => (idx + 1, 1))
+
+    @annotation.tailrec
+    def loop(ei: Int): Int = {
+      val len = c.length
+      if (len % 10000 == 0 || len < 100) {
+        println(s"len: $len")
+      }
+      if (len == 1) c.head._1
+      else {
+        val (en, np1) = c(ei)
+        val aei = (ei + len / 2) % len
+        val (_, np2) = c(aei)
+        c(ei) = (en, np1 + np2)
+        c.remove(aei)
+        loop(if (ei >= c.indices.last) 0 else ei + 1)
+      }
+    }
+
+    loop(0)
+  }
 }
+
+// Wrong: 32283
