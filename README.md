@@ -22,3 +22,4 @@
 * [Day 18: Like a Rogue](http://adventofcode.com/2016/day/18)
 * [Day 19: An Elephant Named Joseph](http://adventofcode.com/2016/day/19)
 * [Day 20: Firewall Rules](http://adventofcode.com/2016/day/20)
+* [Day 21: Scrambled Letters and Hash](http://adventofcode.com/2016/day/21)
