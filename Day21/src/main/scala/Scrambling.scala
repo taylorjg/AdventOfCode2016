@@ -23,6 +23,21 @@ object Scrambling {
     lines map parseLine
   }
 
+  def reverseOperations(operations: Seq[Operation]): Seq[Operation] = {
+    operations.map(reverseOperation).reverse
+  }
+
+  def reverseOperation(operation: Operation): Operation =
+    operation match {
+      case SwapPosition(x, y) => SwapPosition(y, x)
+      case SwapLetter(x, y) => SwapLetter(y, x)
+      case RotateLeft(x) => RotateRight(x)
+      case RotateRight(x) => RotateLeft(x)
+      case RotateLetter(x) => ???
+      case Reverse(x, y) => Reverse(x, y)
+      case Move(x, y) => Move(y, x)
+    }
+
   private final val SwapPositionRegex = """swap position (\d+) with position (\d+)""".r
   private final val SwapLetterRegex = """swap letter ([a-z]) with letter ([a-z])""".r
   private final val RotateLeftRegex = """rotate left (\d+) steps?""".r
@@ -34,10 +49,10 @@ object Scrambling {
   def scramble(s: String, operations: Seq[Operation]): String =
     operations.foldLeft(s)(applyOperation)
 
-  private def applyOperation(s: String, operation: Operation): String =
+  def applyOperation(s: String, operation: Operation): String =
     operation match {
       case SwapPosition(x, y) => swapPosition(s, x, y)
-      case SwapLetter(x, y) => swapLetter(s, x, y)
+      case SwapLetter(x, y) => swapLetter(s, y, x)
       case RotateLeft(x) => rotateLeft(s, x)
       case RotateRight(x) => rotateRight(s, x)
       case RotateLetter(x) => rotateLetter(s, x)
