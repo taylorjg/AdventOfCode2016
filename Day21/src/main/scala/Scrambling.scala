@@ -6,6 +6,7 @@ object Scrambling {
   case class RotateLeft(x: Int) extends Operation
   case class RotateRight(x: Int) extends Operation
   case class RotateLetter(x: Char) extends Operation
+  case class RotateLetterReverse(x: Char) extends Operation
   case class Reverse(x: Int, y: Int) extends Operation
   case class Move(x: Int, y: Int) extends Operation
 
@@ -33,7 +34,8 @@ object Scrambling {
       case SwapLetter(x, y) => SwapLetter(y, x)
       case RotateLeft(x) => RotateRight(x)
       case RotateRight(x) => RotateLeft(x)
-      case RotateLetter(x) => ???
+      case RotateLetter(x) => RotateLetterReverse(x)
+      case RotateLetterReverse(_) => throw new Exception("This operation should not appear in the input")
       case Reverse(x, y) => Reverse(x, y)
       case Move(x, y) => Move(y, x)
     }
@@ -56,6 +58,7 @@ object Scrambling {
       case RotateLeft(x) => rotateLeft(s, x)
       case RotateRight(x) => rotateRight(s, x)
       case RotateLetter(x) => rotateLetter(s, x)
+      case RotateLetterReverse(x) => rotateLetterReverse(s, x)
       case Reverse(x, y) => reverse(s, x, y)
       case Move(x, y) => move(s, x, y)
     }
@@ -85,6 +88,17 @@ object Scrambling {
     val posX = s indexOf x
     val numRotations = posX + 1 + (if (posX >= 4) 1 else 0)
     rotateRight(s, numRotations)
+  }
+
+  def rotateLetterReverse(s: String, x: Char): String = {
+    @annotation.tailrec
+    def loop(n: Int): String = {
+      if (n == s.length) throw new Exception("Failed to reverse RotateLetter!")
+      val unscrambled = rotateLeft(s, n)
+      val rescrambled = rotateLetter(unscrambled, x)
+      if (rescrambled == s) unscrambled else loop(n + 1)
+    }
+    loop(0)
   }
 
   def reverse(s: String, x: Int, y: Int): String = {
