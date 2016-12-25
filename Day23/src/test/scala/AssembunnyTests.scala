@@ -12,9 +12,10 @@ class AssembunnyTests extends FlatSpec {
         |jnz a 2
         |dec a
       """.stripMargin
-    val code = input.split("\n") map (_.trim) filter (_.nonEmpty)
-    val registers = Assembunny.execute(code.toVector)
-    assert(registers.map("a").value == 42)
+    val lines = input.split("\n") map (_.trim) filter (_.nonEmpty)
+    val program = Assembunny.parseProgram(lines)
+    val registers = Assembunny.execute(program)
+    assert(registers.a == 42)
   }
 
   "new given example" should "give the correct result" in {
@@ -28,8 +29,9 @@ class AssembunnyTests extends FlatSpec {
         |dec a
         |dec a
       """.stripMargin
-    val code = input.split("\n") map (_.trim) filter (_.nonEmpty)
-    val registers = Assembunny.execute(code.toVector)
-    assert(registers.map("a").value == 3)
+    val lines = input.split("\n") map (_.trim) filter (_.nonEmpty)
+    val program = Assembunny.parseProgram(lines)
+    val registers = Assembunny.execute(program)
+    assert(registers.a == 3)
   }
 }
