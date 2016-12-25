@@ -4,7 +4,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     val lines = Source.fromResource("day23-input.txt").getLines.toSeq
     val program = Assembunny.parseProgram(lines)
-    val answer1 = Assembunny.execute(program).a
+    val answer1 = Assembunny.execute(program, Register("a", 7)).a
     println(s"answer1: $answer1")
   }
 }

@@ -63,7 +63,6 @@ object Assembunny {
   }
 
   private def executeCpyInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
-    println(s"[executeCpyInstruction] x: $x; y: $y")
     val newValue = Try(x.toInt).toOption match {
       case Some(v) => v
       case None => state.registers.getValue(x)
@@ -119,13 +118,13 @@ object Assembunny {
       case Some(v) => v
       case None => state.registers.getValue(x)
     }
-    val (newProgram, maybeJumpIndex) = toggleInstruction(state, offset)
-    (state.copy(program = newProgram), maybeJumpIndex)
+    val newProgram = toggleInstruction(state, offset)
+    (state.copy(program = newProgram), None)
   }
 
-  private def toggleInstruction(state: State, offset: Int): (Vector[Instruction], Option[Int]) = {
+  private def toggleInstruction(state: State, offset: Int): Vector[Instruction] = {
     val targetInstructionIndex = state.nextInstruction + offset
-    if (!state.program.isDefinedAt(targetInstructionIndex)) (state.program, None)
+    if (!state.program.isDefinedAt(targetInstructionIndex)) state.program
     else {
       val newInstruction = state.program(targetInstructionIndex) match {
         case Cpy(x, y) => Jnz(x, y)
@@ -137,11 +136,7 @@ object Assembunny {
       val newInstructions = state.program.zipWithIndex.map {
         case (oldInstruction, index) => if (index == targetInstructionIndex) newInstruction else oldInstruction
       }
-      println(s"old instructions:")
-      state.program foreach println
-      println(s"new instructions:")
-      newInstructions foreach println
-      (newInstructions, None)
+      newInstructions
     }
   }
 
