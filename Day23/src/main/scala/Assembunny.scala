@@ -58,14 +58,14 @@ object Assembunny {
 
   private def executeCommand(state: State): State = {
     val instruction = state.program(state.nextInstruction)
-    val (newState, maybeJumpTo) = instruction match {
+    val (newState, maybeJumpOffset) = instruction match {
       case Cpy(x, y) => executeCpyInstruction(state, x, y)
       case Inc(x) => executeIncInstruction(state, x)
       case Dec(x) => executeDecInstruction(state, x)
       case Jnz(x, y) => executeJnzInstruction(state, x, y)
       case Tgl(x) => executeTglInstruction(state, x)
     }
-    newState.copy(nextInstruction = maybeJumpTo.getOrElse(state.nextInstruction + 1))
+    newState.copy(nextInstruction = state.nextInstruction + maybeJumpOffset.getOrElse(1))
   }
 
   private def executeCpyInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
@@ -78,12 +78,14 @@ object Assembunny {
   }
 
   private def executeIncInstruction(state: State, x: String): (State, Option[Int]) = {
+    // TODO: x is meant to be a register otherwise invalid
     val r = state.registers.map(x)
     val newRegisters = state.registers.setValue(x, r.value + 1)
     (state.copy(registers = newRegisters), None)
   }
 
   private def executeDecInstruction(state: State, x: String): (State, Option[Int]) = {
+    // TODO: x is meant to be a register otherwise invalid
     val r = state.registers.map(x)
     val newRegisters = state.registers.setValue(x, r.value - 1)
     (state.copy(registers = newRegisters), None)
@@ -94,16 +96,43 @@ object Assembunny {
       case Some(v) => v != 0
       case None => state.registers.getValue(x) != 0
     }
-    val newIndex = if (jump) Some(state.nextInstruction + y.toInt) else None
-    (state, newIndex)
+    val offset = Try(y.toInt).toOption match {
+      case Some(v) => v
+      case None => state.registers.getValue(y)
+    }
+    val maybeJumpOffset = if (jump) Some(offset) else None
+    (state, maybeJumpOffset)
   }
 
   private def executeTglInstruction(state: State, x: String): (State, Option[Int]) = {
-    val newIndex = Try(x.toInt).toOption match {
+    val offset = Try(x.toInt).toOption match {
       case Some(v) => v
       case None => state.registers.getValue(x)
     }
-    ???
+    val (newProgram, maybeJumpIndex) = toggleInstruction(state, offset)
+    (state.copy(program = newProgram), maybeJumpIndex)
+  }
+
+  private def toggleInstruction(state: State, offset: Int): (Vector[Instruction], Option[Int]) = {
+    val targetInstructionIndex = state.nextInstruction + offset
+    if (!state.program.isDefinedAt(targetInstructionIndex)) (state.program, None)
+    else {
+      val newInstruction = state.program(targetInstructionIndex) match {
+        case Cpy(x, y) => Jnz(x, y)
+        case Inc(x) => Dec(x)
+        case Dec(x) => Inc(x)
+        case Jnz(x, y) => Cpy(x, y)
+        case Tgl(x) => Inc(x)
+      }
+      val newInstructions = state.program.zipWithIndex.map {
+        case (oldInstruction, index) => if (index == targetInstructionIndex) newInstruction else oldInstruction
+      }
+      println(s"old instructions:")
+      state.program foreach println
+      println(s"new instructions:")
+      newInstructions foreach println
+      (newInstructions, None)
+    }
   }
 
   private final val CpyRegex = """cpy (\d+|[a-d]) ([a-d])""".r
