@@ -46,42 +46,32 @@ object Assembunny {
       case Jnz(x, y) => executeJnzInstruction(state, x, y)
       case Tgl(x) => executeTglInstruction(state, x)
     }
-    newState.copy(instructionPointer = state.instructionPointer + maybeJumpOffset.getOrElse(NextInstructionOffset))
+    val newInstructionPointer = state.instructionPointer + maybeJumpOffset.getOrElse(NextInstructionOffset)
+    newState.copy(instructionPointer = newInstructionPointer)
   }
 
   private def executeCpyInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
-    val newValue = valueOfLiteralOrRegister(state, x)
-    Try(y.toInt).toOption match {
-      case Some(_) =>
-        (state, None)
-      case None =>
-        val newRegisters = state.registers.setValue(y, newValue)
-        (state.copy(registers = newRegisters), None)
-    }
+    valueOfRegisterOrSkipInstruction(state, y, _ => {
+      val newValue = valueOfLiteralOrRegister(state, x)
+      val newRegisters = state.registers.setValue(y, newValue)
+      (state.copy(registers = newRegisters), None)
+    })
   }
 
   private def executeIncInstruction(state: State, x: String): (State, Option[Int]) = {
-    Try(x.toInt).toOption match {
-      case Some(_) =>
-        (state, None)
-      case None =>
-        val r = state.registers.map(x)
-        val newValue = r.value + 1
-        val newRegisters = state.registers.setValue(x, newValue)
-        (state.copy(registers = newRegisters), None)
-    }
+    valueOfRegisterOrSkipInstruction(state, x, value => {
+      val newValue = value + 1
+      val newRegisters = state.registers.setValue(x, newValue)
+      (state.copy(registers = newRegisters), None)
+    })
   }
 
   private def executeDecInstruction(state: State, x: String): (State, Option[Int]) = {
-    Try(x.toInt).toOption match {
-      case Some(_) =>
-        (state, None)
-      case None =>
-        val r = state.registers.map(x)
-        val newValue = r.value - 1
-        val newRegisters = state.registers.setValue(x, newValue)
-        (state.copy(registers = newRegisters), None)
-    }
+    valueOfRegisterOrSkipInstruction(state, x, value => {
+      val newValue = value - 1
+      val newRegisters = state.registers.setValue(x, newValue)
+      (state.copy(registers = newRegisters), None)
+    })
   }
 
   private def executeJnzInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
@@ -119,6 +109,12 @@ object Assembunny {
     Try(s.toInt).toOption match {
       case Some(v) => v
       case None => state.registers.getValue(s)
+    }
+
+  private def valueOfRegisterOrSkipInstruction(state: State, s: String, f: Int => (State, Option[Int])): (State, Option[Int]) =
+    Try(s.toInt).toOption match {
+      case Some(_) => (state, None)
+      case None => f(state.registers.getValue(s))
     }
 
   private final val CpyRegex = """cpy (-?\d+|[a-d]) ([a-d])""".r
