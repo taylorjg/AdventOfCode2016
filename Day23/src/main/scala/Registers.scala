@@ -6,6 +6,8 @@ class Registers(val map: Map[String, Register]) {
     "c" -> Register("c", 0),
     "d" -> Register("d", 0)))
 
+  def this(rs: Seq[Register]) = this(rs.map(r => (r.name, r)).toMap)
+
   def getValue(r: String): Int = map(r).value
 
   def setValue(r: String, value: Int): Registers =

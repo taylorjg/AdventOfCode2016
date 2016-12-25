@@ -5,23 +5,31 @@ object Assembunny {
   case class State(program: Vector[Instruction], registers: Registers, nextInstruction: Int)
 
   sealed trait Instruction {
-    self: NumArguments => {
+    self: NumArguments =>
+    {
     }
   }
+
   sealed trait NumArguments {
     val numArguments: Int
   }
+
   sealed trait OneArgument extends NumArguments {
     val numArguments = 1
   }
+
   sealed trait TwoArguments extends NumArguments {
     val numArguments = 2
   }
 
   case class Cpy(x: String, y: String) extends Instruction with TwoArguments
+
   case class Inc(x: String) extends Instruction with OneArgument
+
   case class Dec(x: String) extends Instruction with OneArgument
+
   case class Jnz(x: String, y: String) extends Instruction with TwoArguments
+
   case class Tgl(x: String) extends Instruction with OneArgument
 
   def parseProgram(program: Seq[String]): Vector[Instruction] = {
@@ -32,7 +40,7 @@ object Assembunny {
         case DecRegex(x) => Dec(x)
         case JnzRegex(x, y) => Jnz(x, y)
         case TglRegex(x) => Tgl(x)
-        case _ => throw new Exception(s"""Unknown instruction, "$line".""")
+        case _ => throw new Exception(s"""Don't know how to parse "$line".""")
       }
     }
     program.map(parseLine).toVector
@@ -42,7 +50,7 @@ object Assembunny {
     @annotation.tailrec
     def loop(state: State): State =
       if (state.nextInstruction >= program.length) state else loop(executeCommand(state))
-    val initialRegisters = new Registers(new Registers().map ++ (rs map (r => (r.name, r))))
+    val initialRegisters = new Registers(rs)
     val initialState = State(program, initialRegisters, 0)
     val finalState = loop(initialState)
     finalState.registers
@@ -56,7 +64,6 @@ object Assembunny {
       case Dec(x) => executeDecInstruction(state, x)
       case Jnz(x, y) => executeJnzInstruction(state, x, y)
       case Tgl(x) => executeTglInstruction(state, x)
-      case _ => throw new Exception(s"""Unknown instruction, "$instruction".""")
     }
     newState.copy(nextInstruction = maybeJumpTo.getOrElse(state.nextInstruction + 1))
   }
