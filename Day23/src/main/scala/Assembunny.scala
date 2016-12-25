@@ -6,8 +6,6 @@ object Assembunny {
 
   sealed trait Instruction {
     self: NumArguments =>
-    {
-    }
   }
 
   sealed trait NumArguments {
@@ -23,13 +21,9 @@ object Assembunny {
   }
 
   case class Cpy(x: String, y: String) extends Instruction with TwoArguments
-
   case class Inc(x: String) extends Instruction with OneArgument
-
   case class Dec(x: String) extends Instruction with OneArgument
-
   case class Jnz(x: String, y: String) extends Instruction with TwoArguments
-
   case class Tgl(x: String) extends Instruction with OneArgument
 
   def parseProgram(program: Seq[String]): Vector[Instruction] = {
@@ -69,26 +63,42 @@ object Assembunny {
   }
 
   private def executeCpyInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
+    println(s"[executeCpyInstruction] x: $x; y: $y")
     val newValue = Try(x.toInt).toOption match {
       case Some(v) => v
       case None => state.registers.getValue(x)
     }
-    val newRegisters = state.registers.setValue(y, newValue)
-    (state.copy(registers = newRegisters), None)
+    Try(y.toInt).toOption match {
+      case Some(_) =>
+        (state, None)
+      case None =>
+        val newRegisters = state.registers.setValue(y, newValue)
+        (state.copy(registers = newRegisters), None)
+    }
   }
 
   private def executeIncInstruction(state: State, x: String): (State, Option[Int]) = {
-    // TODO: x is meant to be a register otherwise invalid
-    val r = state.registers.map(x)
-    val newRegisters = state.registers.setValue(x, r.value + 1)
-    (state.copy(registers = newRegisters), None)
+    Try(x.toInt).toOption match {
+      case Some(_) =>
+        (state, None)
+      case None =>
+        val r = state.registers.map(x)
+        val newValue = r.value + 1
+        val newRegisters = state.registers.setValue(x, newValue)
+        (state.copy(registers = newRegisters), None)
+    }
   }
 
   private def executeDecInstruction(state: State, x: String): (State, Option[Int]) = {
-    // TODO: x is meant to be a register otherwise invalid
-    val r = state.registers.map(x)
-    val newRegisters = state.registers.setValue(x, r.value - 1)
-    (state.copy(registers = newRegisters), None)
+    Try(x.toInt).toOption match {
+      case Some(_) =>
+        (state, None)
+      case None =>
+        val r = state.registers.map(x)
+        val newValue = r.value - 1
+        val newRegisters = state.registers.setValue(x, newValue)
+        (state.copy(registers = newRegisters), None)
+    }
   }
 
   private def executeJnzInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
@@ -135,9 +145,9 @@ object Assembunny {
     }
   }
 
-  private final val CpyRegex = """cpy (\d+|[a-d]) ([a-d])""".r
+  private final val CpyRegex = """cpy (-?\d+|[a-d]) ([a-d])""".r
   private final val IncRegex = """inc ([a-d])""".r
   private final val DecRegex = """dec ([a-d])""".r
-  private final val JnzRegex = """jnz (\d+|[a-d]) (-?\d+)""".r
-  private final val TglRegex = """tgl (\d+|[a-d])""".r
+  private final val JnzRegex = """jnz (-?\d+|[a-d]) (-?\d+|[a-d])""".r
+  private final val TglRegex = """tgl (-?\d+|[a-d])""".r
 }

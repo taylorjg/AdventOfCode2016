@@ -39,6 +39,12 @@ object GridComputing {
   }
 
   def fewestNumberOfSteps(nodes: Seq[Node]): Int = {
+    val maxX = nodes.maxBy(n => n.x).x
+    val maxY = nodes.maxBy(n => n.y).y
+    val allCoords = for {
+      x <- 0 to maxX
+      y <- 0 to maxY
+    } yield (x, y)
     -1
   }
 }
