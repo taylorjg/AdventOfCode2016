@@ -2,73 +2,87 @@ import scala.util.Try
 
 object Assembunny {
 
-  def execute(code: Vector[String], rs: Register*): Registers = {
-    @annotation.tailrec
-    def loop(registers: Registers, index: Int): Registers =
-      if (index >= code.length) registers
-      else {
-        val (newRegisters, jumpIndex) = executeCommand(code, registers, index)
-        val newIndex = jumpIndex.getOrElse(index + 1)
-        loop(newRegisters, newIndex)
+  case class State(program: Vector[Instruction], registers: Registers, instructionPointer: Int)
+
+  sealed trait Instruction
+  case class Cpy(x: String, y: String) extends Instruction
+  case class Inc(x: String) extends Instruction
+  case class Dec(x: String) extends Instruction
+  case class Jnz(x: String, y: String) extends Instruction
+
+  def parseProgram(program: Seq[String]): Vector[Instruction] = {
+    def parseLine(line: String): Instruction = {
+      line match {
+        case CpyRegex(x, y) => Cpy(x, y)
+        case IncRegex(x) => Inc(x)
+        case DecRegex(x) => Dec(x)
+        case JnzRegex(x, y) => Jnz(x, y)
+        case _ => throw new Exception(s"""Don't know how to parse "$line".""")
       }
-    val initialRegisters = new Registers(new Registers().map ++ (rs map (r => (r.name, r))))
-    loop(initialRegisters, 0)
-  }
-
-  private def executeCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
-    val line = code(index)
-    val b1 = CpyRegex.pattern.matcher(line).matches
-    val b2 = IncRegex.pattern.matcher(line).matches
-    val b3 = DecRegex.pattern.matcher(line).matches
-    val b4 = JnzRegex.pattern.matcher(line).matches
-    (b1, b2, b3, b4) match {
-      case (true, false, false, false) => executeCpyCommand(code, registers, index)
-      case (false, true, false, false) => executeIncCommand(code, registers, index)
-      case (false, false, true, false) => executeDecCommand(code, registers, index)
-      case (false, false, false, true) => executeJnzCommand(code, registers, index)
-      case _ => throw new Exception(s"""Unknown instruction, "$line".""")
     }
+    program.map(parseLine).toVector
   }
 
-  private def executeCpyCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
-    val m = CpyRegex.findAllIn(code(index))
-    val x = m.group(1)
-    val y = m.group(2)
-    val newValue = Try(x.toInt).toOption match {
+  def execute(program: Vector[Instruction], rs: Register*): Registers = {
+    @annotation.tailrec
+    def loop(state: State): State =
+      if (state.instructionPointer >= program.length) state else loop(executeCommand(state))
+    val initialRegisters = new Registers(rs)
+    val initialState = State(program, initialRegisters, 0)
+    val finalState = loop(initialState)
+    finalState.registers
+  }
+
+  private final val NextInstructionOffset = 1
+
+  private def executeCommand(state: State): State = {
+    val instruction = state.program(state.instructionPointer)
+    val (newState, maybeJumpOffset) = instruction match {
+      case Cpy(x, y) => executeCpyInstruction(state, x, y)
+      case Inc(x) => executeIncInstruction(state, x)
+      case Dec(x) => executeDecInstruction(state, x)
+      case Jnz(x, y) => executeJnzInstruction(state, x, y)
+    }
+    val newInstructionPointer = state.instructionPointer + maybeJumpOffset.getOrElse(NextInstructionOffset)
+    newState.copy(instructionPointer = newInstructionPointer)
+  }
+
+  private def executeCpyInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
+    val value = valueOfLiteralOrRegister(state, x)
+    val newRegisters = state.registers.setValue(y, value)
+    (state.copy(registers = newRegisters), None)
+  }
+
+  private def executeIncInstruction(state: State, x: String): (State, Option[Int]) = {
+    val value = valueOfRegister(state, x)
+    val newRegisters = state.registers.setValue(x, value + 1)
+    (state.copy(registers = newRegisters), None)
+  }
+
+  private def executeDecInstruction(state: State, x: String): (State, Option[Int]) = {
+    val value = valueOfRegister(state, x)
+    val newRegisters = state.registers.setValue(x, value - 1)
+    (state.copy(registers = newRegisters), None)
+  }
+
+  private def executeJnzInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
+    val nz = valueOfLiteralOrRegister(state, x) != 0
+    val jumpOffset = valueOfLiteralOrRegister(state, y)
+    val maybeJumpOffset = Some(jumpOffset) filter (_ => nz)
+    (state, maybeJumpOffset)
+  }
+
+  private def valueOfRegister(state: State, s: String): Int =
+    state.registers.getValue(s)
+
+  private def valueOfLiteralOrRegister(state: State, s: String): Int =
+    Try(s.toInt).toOption match {
       case Some(v) => v
-      case None => registers.map(x).value
+      case None => state.registers.getValue(s)
     }
-    (new Registers(registers.map.updated(y, Register(y, newValue))), None)
-  }
 
-  private def executeIncCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
-    val m = IncRegex.findAllIn(code(index))
-    val x = m.group(1)
-    val register = registers.map(x)
-    (new Registers(registers.map.updated(x, Register(x, register.value + 1))), None)
-  }
-
-  private def executeDecCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
-    val m = DecRegex.findAllIn(code(index))
-    val x = m.group(1)
-    val register = registers.map(x)
-    (new Registers(registers.map.updated(x, Register(x, register.value - 1))), None)
-  }
-
-  private def executeJnzCommand(code: Vector[String], registers: Registers, index: Int): (Registers, Option[Int]) = {
-    val m = JnzRegex.findAllIn(code(index))
-    val x = m.group(1)
-    val y = m.group(2).toInt
-    val jump = Try(x.toInt).toOption match {
-      case Some(v) => v != 0
-      case None => registers.map(x).value != 0
-    }
-    val newIndex = if (jump) Some(index + y) else None
-    (registers, newIndex)
-  }
-
-  private final val CpyRegex = """cpy (\d+|[a-d]) ([a-d])""".r
+  private final val CpyRegex = """cpy (-?\d+|[a-d]) ([a-d])""".r
   private final val IncRegex = """inc ([a-d])""".r
   private final val DecRegex = """dec ([a-d])""".r
-  private final val JnzRegex = """jnz (\d+|[a-d]) (-?\d+)""".r
+  private final val JnzRegex = """jnz (-?\d+|[a-d]) (-?\d+|[a-d])""".r
 }

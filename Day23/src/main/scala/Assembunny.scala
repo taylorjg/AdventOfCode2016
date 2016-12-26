@@ -10,6 +10,7 @@ object Assembunny {
   case class Dec(x: String) extends Instruction
   case class Jnz(x: String, y: String) extends Instruction
   case class Tgl(x: String) extends Instruction
+  case class Mul(x: String, y: String) extends Instruction
 
   def parseProgram(program: Seq[String]): Vector[Instruction] = {
     def parseLine(line: String): Instruction = {
@@ -19,10 +20,15 @@ object Assembunny {
         case DecRegex(x) => Dec(x)
         case JnzRegex(x, y) => Jnz(x, y)
         case TglRegex(x) => Tgl(x)
+        case MulRegex(x, y) => Mul(x, y)
         case _ => throw new Exception(s"""Don't know how to parse "$line".""")
       }
     }
-    program.map(parseLine).toVector
+    program
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .filter(!_.startsWith(LineComment))
+      .map(parseLine).toVector
   }
 
   def execute(program: Vector[Instruction], rs: Register*): Registers = {
@@ -35,6 +41,7 @@ object Assembunny {
     finalState.registers
   }
 
+  private final val LineComment = ";"
   private final val NextInstructionOffset = 1
 
   private def executeCommand(state: State): State = {
@@ -45,6 +52,7 @@ object Assembunny {
       case Dec(x) => executeDecInstruction(state, x)
       case Jnz(x, y) => executeJnzInstruction(state, x, y)
       case Tgl(x) => executeTglInstruction(state, x)
+      case Mul(x, y) => executeMulInstruction(state, x, y)
     }
     val newInstructionPointer = state.instructionPointer + maybeJumpOffset.getOrElse(NextInstructionOffset)
     newState.copy(instructionPointer = newInstructionPointer)
@@ -87,6 +95,14 @@ object Assembunny {
     (state.copy(program = newProgram), None)
   }
 
+  private def executeMulInstruction(state: State, x: String, y: String): (State, Option[Int]) = {
+    val aValue = state.registers.getValue("a")
+    val xValue = state.registers.getValue(x)
+    val yValue = state.registers.getValue(y)
+    val newRegisters = state.registers.setValue("a", aValue + xValue * yValue)
+    (state.copy(registers = newRegisters), None)
+  }
+
   private def toggleInstruction(state: State, offset: Int): Vector[Instruction] = {
     val targetInstructionIndex = state.instructionPointer + offset
     if (!state.program.isDefinedAt(targetInstructionIndex)) state.program
@@ -97,6 +113,7 @@ object Assembunny {
         case Dec(x) => Inc(x)
         case Jnz(x, y) => Cpy(x, y)
         case Tgl(x) => Inc(x)
+        case Mul(x, y) => Jnz(x, y)
       }
       val newInstructions = state.program.zipWithIndex.map {
         case (oldInstruction, index) => if (index == targetInstructionIndex) newInstruction else oldInstruction
@@ -122,4 +139,5 @@ object Assembunny {
   private final val DecRegex = """dec ([a-d])""".r
   private final val JnzRegex = """jnz (-?\d+|[a-d]) (-?\d+|[a-d])""".r
   private final val TglRegex = """tgl (-?\d+|[a-d])""".r
+  private final val MulRegex = """mul ([a-d]) ([a-d])""".r
 }
