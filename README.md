@@ -24,3 +24,4 @@
 * [Day 20: Firewall Rules](http://adventofcode.com/2016/day/20)
 * [Day 21: Scrambled Letters and Hash](http://adventofcode.com/2016/day/21)
 * [Day 22: Grid Computing](http://adventofcode.com/2016/day/22)
+* [Day 23: Safe Cracking](http://adventofcode.com/2016/day/23)

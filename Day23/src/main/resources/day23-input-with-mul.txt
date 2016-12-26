@@ -10,7 +10,7 @@ cpy 0 a
 ; dec d
 ; jnz d -5
 ; "The obvious result of this loop is that 'a' is incremented by d * b (clearing 'd' and 'c')."
-mul d b
+mul a d b
 
 dec b
 cpy b c

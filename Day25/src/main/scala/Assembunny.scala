@@ -2,7 +2,7 @@ import scala.util.Try
 
 object Assembunny {
 
-  case class State(program: Vector[Instruction], registers: Registers, instructionPointer: Int)
+  case class State(program: Vector[Instruction], registers: Registers, output: List[Int], instructionPointer: Int)
 
   sealed trait Instruction
   case class Cpy(x: String, y: String) extends Instruction
@@ -11,6 +11,7 @@ object Assembunny {
   case class Jnz(x: String, y: String) extends Instruction
   case class Tgl(x: String) extends Instruction
   case class Mul(x: String, y: String, z: String) extends Instruction
+  case class Out(x: String) extends Instruction
 
   def parseProgram(program: Seq[String]): Vector[Instruction] = {
     def parseLine(line: String): Instruction = {
@@ -21,6 +22,7 @@ object Assembunny {
         case JnzRegex(x, y) => Jnz(x, y)
         case TglRegex(x) => Tgl(x)
         case MulRegex(x, y, z) => Mul(x, y, z)
+        case OutRegex(x) => Out(x)
         case _ => throw new Exception(s"""Don't know how to parse "$line".""")
       }
     }
@@ -31,14 +33,13 @@ object Assembunny {
       .map(parseLine).toVector
   }
 
-  def execute(program: Vector[Instruction], rs: Register*): Registers = {
+  def execute(program: Vector[Instruction], rs: Register*): State = {
     @annotation.tailrec
     def loop(state: State): State =
-      if (state.instructionPointer >= program.length) state else loop(executeCommand(state))
+      if (state.instructionPointer >= program.length || state.output.length >= 100) state else loop(executeCommand(state))
     val initialRegisters = new Registers(rs)
-    val initialState = State(program, initialRegisters, 0)
-    val finalState = loop(initialState)
-    finalState.registers
+    val initialState = State(program, initialRegisters, List(), 0)
+    loop(initialState)
   }
 
   private final val LineComment = ";"
@@ -53,6 +54,7 @@ object Assembunny {
       case Jnz(x, y) => executeJnzInstruction(state, x, y)
       case Tgl(x) => executeTglInstruction(state, x)
       case Mul(x, y, z) => executeMulInstruction(state, x, y, z)
+      case Out(x) => executeOutInstruction(state, x)
     }
     val newInstructionPointer = state.instructionPointer + maybeJumpOffset.getOrElse(NextInstructionOffset)
     newState.copy(instructionPointer = newInstructionPointer)
@@ -103,6 +105,11 @@ object Assembunny {
     (state.copy(registers = newRegisters), None)
   }
 
+  private def executeOutInstruction(state: State, x: String): (State, Option[Int]) = {
+    val xValue = valueOfLiteralOrRegister(state, x)
+    (state.copy(output = xValue :: state.output), None)
+  }
+
   private def toggleInstruction(state: State, offset: Int): Vector[Instruction] = {
     val targetInstructionIndex = state.instructionPointer + offset
     if (!state.program.isDefinedAt(targetInstructionIndex)) state.program
@@ -140,4 +147,5 @@ object Assembunny {
   private final val JnzRegex = """jnz (-?\d+|[a-d]) (-?\d+|[a-d])""".r
   private final val TglRegex = """tgl (-?\d+|[a-d])""".r
   private final val MulRegex = """mul ([a-d]) ([a-d]) ([a-d])""".r
+  private final val OutRegex = """out (-?\d+|[a-d])""".r
 }
