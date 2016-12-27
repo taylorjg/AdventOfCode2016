@@ -32,6 +32,11 @@ class AirDuctSpelunkingTests extends FlatSpec {
       4 -> Location(1, 3)))
   }
 
+  "shortest route from 4 to 1" should "be 4 steps" in {
+    val airDuctSpelunking = new AirDuctSpelunking(Lines)
+    assert(airDuctSpelunking.shortestRoute(4, 1).contains(4))
+  }
+
   "given example" should "find the shortest route" in {
     val airDuctSpelunking = new AirDuctSpelunking(Lines)
     assert(airDuctSpelunking.shortestRoute() == 14)
