@@ -34,7 +34,6 @@ class AirDuctSpelunking(lines: Vector[String]) {
     val solutions = findSolutions(Set(startNode), List())
     val sortedSolutions = solutions.sortBy(_.length)
     val shortestSolution = sortedSolutions.headOption
-    println(shortestSolution.mkString(" => "))
     shortestSolution map (_.length - 1)
   }
 
@@ -50,7 +49,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
     maybeFinalNode map path
   }
 
-  final val ShortestRouteCache: mutable.Map[(Location, Location), List[Location]] = scala.collection.mutable.Map[(Location, Location), List[Location]]()
+  private final val ShortestRouteCache: mutable.Map[(Location, Location), List[Location]] = scala.collection.mutable.Map[(Location, Location), List[Location]]()
 
   private def shortestRouteWithCaching(fromLocation: Location, toLocation: Location): Option[List[Location]] = {
     val forwardKey = (fromLocation, toLocation)
@@ -80,7 +79,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
 
   case class Node2(path: List[Location], goals: Set[Location], lastGoal: Location)
 
-  def distance(l1: Location, l2: Location): Double = {
+  private def distance(l1: Location, l2: Location): Double = {
     val dx = l1.x - l2.x
     val dy = l1.y - l2.y
     Math.hypot(dx, dy)
@@ -104,16 +103,6 @@ class AirDuctSpelunking(lines: Vector[String]) {
       parent.g + distance(parent.location, location),
       distance(location, goal))
 
-  private def pathLength(node: Node): Int = {
-    @annotation.tailrec
-    def loop(n: Node, acc: Int): Int =
-      n.parent match {
-        case Some(child) => loop(child, acc + 1)
-        case None => acc
-      }
-    loop(node, 0)
-  }
-
   private def path(node: Node): List[Location] = {
     @annotation.tailrec
     def loop(n: Node, acc: List[Location]): List[Location] = {
@@ -127,7 +116,6 @@ class AirDuctSpelunking(lines: Vector[String]) {
 
   @annotation.tailrec
   private def aStar(goal: Location, openSet: Set[Node], closedSet: Set[Node]): Option[Node] = {
-    println(s"openSet size: ${openSet.size}; closedSet size: ${closedSet.size}")
     if (openSet.isEmpty) None
     else {
       val currentNode = openSet.minBy(_.f)
@@ -138,7 +126,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
         val neighbourLocations = getOpenSpaceNeighbourLocations(currentNode.location)
         val neighbourNodes = neighbourLocations map makeNeighbourNode(currentNode, goal)
 
-        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location && n.f < nn.f
+        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location // && n.f < nn.f
 
         val filteredNeighbourNodes = neighbourNodes filter (nn =>
           !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
@@ -158,7 +146,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
         findSolutions(newNodes, currentNode.path :: solutions)
       }
       else {
-        val newNodes = currentNode.goals flatMap (goal => {
+        val newNodes2 = currentNode.goals flatMap (goal => {
           shortestRouteWithCaching(currentNode.lastGoal, goal) match {
             case Some(path) =>
               val newNode = Node2(currentNode.path ++ path.tail, currentNode.goals - goal, goal)
@@ -168,7 +156,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
               List()
           }
         })
-        findSolutions(newNodes ++ newNodes, solutions)
+        findSolutions(newNodes ++ newNodes2, solutions)
       }
     }
   }
