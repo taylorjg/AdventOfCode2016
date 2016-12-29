@@ -27,11 +27,11 @@ class AirDuctSpelunking(lines: Vector[String]) {
     kvps.toMap
   }
 
-  def shortestRoute(): Option[Int] = {
+  def shortestRoute(returnToStart: Boolean): Option[Int] = {
     val startLocation = numberedLocations(0)
     val goals = numberedLocations.values.toSet - startLocation
     val startNode = Node2(path = List(startLocation), goals, lastGoal = startLocation)
-    val solutions = findSolutions(Set(startNode), List())
+    val solutions = findSolutions(Set(startNode), List(), returnToStart)
     val sortedSolutions = solutions.sortBy(_.length)
     val shortestSolution = sortedSolutions.headOption
     shortestSolution map (_.length - 1)
@@ -126,7 +126,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
         val neighbourLocations = getOpenSpaceNeighbourLocations(currentNode.location)
         val neighbourNodes = neighbourLocations map makeNeighbourNode(currentNode, goal)
 
-        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location // && n.f < nn.f
+        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location
 
         val filteredNeighbourNodes = neighbourNodes filter (nn =>
           !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
@@ -136,17 +136,25 @@ class AirDuctSpelunking(lines: Vector[String]) {
   }
 
   @annotation.tailrec
-  private def findSolutions(nodes: Set[Node2], solutions: List[List[Location]]): List[List[Location]] = {
+  private def findSolutions(nodes: Set[Node2], solutions: List[List[Location]], returnToStart: Boolean): List[List[Location]] = {
     if (nodes.isEmpty) solutions
     else {
       val currentNode = nodes.head
       val newNodes = nodes - currentNode
       if (currentNode.goals.isEmpty) {
-        println(s"Found a solution with ${currentNode.path.length - 1} steps")
-        findSolutions(newNodes, currentNode.path :: solutions)
+        if (returnToStart) {
+          val returnPath = shortestRouteWithCaching(currentNode.lastGoal, currentNode.path.head).get
+          val newCurrentNode = Node2(currentNode.path ++ returnPath.tail, Set(), currentNode.path.head)
+          println(s"Found a solution with ${newCurrentNode.path.length - 1} steps")
+          findSolutions(newNodes, newCurrentNode.path :: solutions, returnToStart)
+        }
+        else {
+          println(s"Found a solution with ${currentNode.path.length - 1} steps")
+          findSolutions(newNodes, currentNode.path :: solutions, returnToStart)
+        }
       }
       else {
-        val newNodes2 = currentNode.goals flatMap (goal => {
+        val nextNodes = currentNode.goals flatMap (goal => {
           shortestRouteWithCaching(currentNode.lastGoal, goal) match {
             case Some(path) =>
               val newNode = Node2(currentNode.path ++ path.tail, currentNode.goals - goal, goal)
@@ -156,7 +164,7 @@ class AirDuctSpelunking(lines: Vector[String]) {
               List()
           }
         })
-        findSolutions(newNodes ++ newNodes2, solutions)
+        findSolutions(newNodes ++ nextNodes, solutions, returnToStart)
       }
     }
   }
