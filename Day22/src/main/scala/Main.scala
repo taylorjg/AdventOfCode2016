@@ -6,5 +6,6 @@ object Main {
     val nodes = GridComputing.parseLines(lines)
     val answer1 = GridComputing.viableNodes(nodes).length
     println(s"answer1: $answer1")
+    GridComputing.visualise(nodes)
   }
 }
