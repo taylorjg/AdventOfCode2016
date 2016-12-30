@@ -58,9 +58,9 @@ class AirDuctSpelunking(lines: Vector[String]) {
     val maybeReverseRoute = ShortestRouteCache.get(reverseKey)
     val maybeRoute = maybeForwardRoute.orElse(maybeReverseRoute map (_.reverse))
     maybeRoute match {
-      case Some(cachedRoute) => Some(cachedRoute)
+      case Some(cachedRoute) =>
+        Some(cachedRoute)
       case None =>
-        println(s"Cache miss $fromLocation to $toLocation")
         shortestRoute(fromLocation, toLocation) match {
           case Some(route) =>
             ShortestRouteCache += (forwardKey -> route)
@@ -70,8 +70,6 @@ class AirDuctSpelunking(lines: Vector[String]) {
         }
     }
   }
-
-  def clearShortestRouteCache(): Unit = ShortestRouteCache.clear()
 
   case class Node(location: Location, parent: Option[Node], g: Double, h: Double) {
     val f: Double = g + h
@@ -125,11 +123,9 @@ class AirDuctSpelunking(lines: Vector[String]) {
       else {
         val neighbourLocations = getOpenSpaceNeighbourLocations(currentNode.location)
         val neighbourNodes = neighbourLocations map makeNeighbourNode(currentNode, goal)
-
-        def betterNode(nn: Node)(n: Node): Boolean = n.location == nn.location
-
+        def matchingNode(nn: Node)(n: Node): Boolean = n.location == nn.location
         val filteredNeighbourNodes = neighbourNodes filter (nn =>
-          !newOpenSet.exists(betterNode(nn)) && !newClosedSet.exists(betterNode(nn)))
+          !newOpenSet.exists(matchingNode(nn)) && !newClosedSet.exists(matchingNode(nn)))
         aStar(goal, newOpenSet ++ filteredNeighbourNodes, newClosedSet)
       }
     }
@@ -143,15 +139,16 @@ class AirDuctSpelunking(lines: Vector[String]) {
       val newNodes = nodes - currentNode
       if (currentNode.goals.isEmpty) {
         if (returnToStart) {
-          val returnPath = shortestRouteWithCaching(currentNode.lastGoal, currentNode.path.head).get
-          val newCurrentNode = Node2(currentNode.path ++ returnPath.tail, Set(), currentNode.path.head)
-          println(s"Found a solution with ${newCurrentNode.path.length - 1} steps")
-          findSolutions(newNodes, newCurrentNode.path :: solutions, returnToStart)
+          shortestRouteWithCaching(currentNode.lastGoal, currentNode.path.head) match {
+            case Some(returnPath) =>
+              val solution = currentNode.path ++ returnPath.tail
+              findSolutions(newNodes, solution :: solutions, returnToStart)
+            case None =>
+              println(s"No return route found from ${currentNode.lastGoal} to ${currentNode.path.head} !!!")
+              findSolutions(newNodes, solutions, returnToStart)
+          }
         }
-        else {
-          println(s"Found a solution with ${currentNode.path.length - 1} steps")
-          findSolutions(newNodes, currentNode.path :: solutions, returnToStart)
-        }
+        else findSolutions(newNodes, currentNode.path :: solutions, returnToStart)
       }
       else {
         val nextNodes = currentNode.goals flatMap (goal => {
