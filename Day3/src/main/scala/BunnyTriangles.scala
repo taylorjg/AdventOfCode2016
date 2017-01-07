@@ -15,14 +15,15 @@ object BunnyTriangles {
   }
 
   def countValidTrianglesVertically(lines: Seq[String]): Int = {
-    def extractCol(nsh: Seq[Seq[Int]], col: Int): Seq[Int] = nsh map (_(col))
-    def countValidTrianglesInGroupOf3Lines(groupOfLines: Seq[String]): Int = {
-      val nsh = groupOfLines map parseLine
-      val nsv = 0 to 2 map (col => extractCol(nsh, col))
-      nsv count isValidTriangle
+    def extractCol(parsedLines: Seq[Seq[Int]])(col: Int): Seq[Int] = parsedLines map (_(col))
+    def countValidTrianglesInGroupOfLines(groupOfLines: Seq[String]): Int = {
+      val parsedLines = groupOfLines map parseLine
+      val cols = parsedLines.head.indices
+      val transposedLines = cols map extractCol(parsedLines)
+      transposedLines count isValidTriangle
     }
     val cleanedLines = lines map (_.trim) filter (_.nonEmpty)
-    val groupedLines = cleanedLines.grouped(3)
-    groupedLines.foldLeft(0)((acc, groupOfLines) => acc + countValidTrianglesInGroupOf3Lines(groupOfLines))
+    val groupedLines = cleanedLines grouped 3
+    groupedLines.foldLeft(0)((acc, groupOfLines) => acc + countValidTrianglesInGroupOfLines(groupOfLines))
   }
 }

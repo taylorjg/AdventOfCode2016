@@ -6,13 +6,11 @@ object OneTimePad {
 
     type Cache = Map[Int, String]
 
-    def findXxx(hash: String): Option[String] = {
-      if (XxxRegex.pattern.matcher(hash).matches()) {
-        val m = XxxRegex.findAllIn(hash)
-        Some(m.group(1))
+    def findXxx(hash: String): Option[String] =
+      hash match {
+        case XxxRegex(x) => Some(x)
+        case _ => None
       }
-      else None
-    }
 
     def findXxxxx(x: Char, fromIndex: Int, toIndex: Int, initialCache: Cache): (Option[Int], Option[String], Cache) = {
       @annotation.tailrec
@@ -26,9 +24,11 @@ object OneTimePad {
               val h = calculateHash(salt, index, hashType)
               (h, cache + (index -> h))
           }
-          val r = s".*($x)\\1{4}.*".r
-          if (r.pattern.matcher(hash).matches()) (Some(index), Some(hash), updatedCache)
-          else loop(index + 1, updatedCache)
+          val dynamicXxxxxRegex = s".*?($x)\\1{4}.*".r
+          hash match {
+            case dynamicXxxxxRegex(_) => (Some(index), Some(hash), updatedCache)
+            case _ => loop(index + 1, updatedCache)
+          }
         }
       }
       loop(fromIndex, initialCache)

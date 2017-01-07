@@ -12,38 +12,29 @@ class Screen(width: Int, height: Int, val matrix: Vector[Boolean]) {
 
   def processInstruction(instruction: String): Screen =
     instruction match {
-      case _ if instruction.startsWith("rect") => processRect(instruction)
-      case _ if instruction.startsWith("rotate column") => processRotateColumn(instruction)
-      case _ if instruction.startsWith("rotate row") => processRotateRow(instruction)
+      case RectRegex(w, h) => processRect(w.toInt, h.toInt)
+      case RotateColumnRegex(x, by) => processRotateColumn(x.toInt, by.toInt)
+      case RotateRowRegex(y, by) => processRotateRow(y.toInt, by.toInt)
       case _ => throw new Exception(s"""Unexpected instruction, "$instruction".""")
     }
 
-  private def processRect(instruction: String): Screen = {
-    val m = RectRegex.findAllIn(instruction)
-    val rectWidth = m.group(1).toInt
-    val rectHeight = m.group(2).toInt
+  private def processRect(rectWidth: Int, rectHeight: Int): Screen = {
     val rectMatrix = Vector.tabulate(width, height)(_ < rectWidth && _ < rectHeight).transpose.flatten
     val newMatrix = mergeMatricesUsingLogicalOr(matrix, rectMatrix)
     new Screen(width, height, newMatrix)
   }
 
-  private def processRotateColumn(instruction: String): Screen = {
-    val m = RotateColumnRegex.findAllIn(instruction)
-    val y = m.group(1).toInt
-    val by = m.group(2).toInt
-    val oldCol = extractColumn(matrix, width, y)
+  private def processRotateColumn(x: Int, by: Int): Screen = {
+    val oldCol = extractColumn(matrix, width, x)
     val newCol = rotateRight(oldCol, by)
-    val newMatrix = insertColumn(matrix, width, y, newCol)
+    val newMatrix = insertColumn(matrix, width, x, newCol)
     new Screen(width, height, newMatrix)
   }
 
-  private def processRotateRow(instruction: String): Screen = {
-    val m = RotateRowRegex.findAllIn(instruction)
-    val x = m.group(1).toInt
-    val by = m.group(2).toInt
-    val oldRow = extractRow(matrix, width, x)
+  private def processRotateRow(y: Int, by: Int): Screen = {
+    val oldRow = extractRow(matrix, width, y)
     val newRow = rotateRight(oldRow, by)
-    val newMatrix = insertRow(matrix, width, x, newRow)
+    val newMatrix = insertRow(matrix, width, y, newRow)
     new Screen(width, height, newMatrix)
   }
 }

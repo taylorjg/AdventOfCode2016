@@ -1,17 +1,4 @@
-import scala.io.Source
-
 object InternetProtocolVersion7 {
-
-  def main(args: Array[String]): Unit = {
-
-    val lines = Source.fromResource("day7-input.txt").getLines.toList
-
-    val answer1 = lines map supportsTLS count (_ == true)
-    println(s"number of IPs that support TLS: $answer1")
-
-    val answer2 = lines map supportsSSL count (_ == true)
-    println(s"number of IPs that support SSL: $answer2")
-  }
 
   def supportsTLS(input: String): Boolean = {
     val (supernets, hypernets) = partitionInput(input)

@@ -1,12 +1,4 @@
-import scala.io.Source
-
 object Bunny {
-
-  def main(args: Array[String]): Unit = {
-    val (answer1, maybeAnswer2) = distance(parseSteps(Source.fromResource("day1-input.txt").mkString))
-    println(s"The bunny is $answer1 blocks away.")
-    maybeAnswer2 foreach (answer2 => println(s"The first location revisited by the bunny is $answer2 blocks away."))
-  }
 
   object Turn extends Enumeration {
     val L, R = Value

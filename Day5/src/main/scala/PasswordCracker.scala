@@ -2,16 +2,7 @@ import scala.util.{Success, Try}
 
 object PasswordCracker {
 
-  def main(args: Array[String]): Unit = {
-
-    val answer1 = crackPassword("reyedfim")
-    println(s"part 1 answer: $answer1")
-
-    val answer2 = crackPassword2("reyedfim")
-    println(s"part 2 answer: $answer2")
-  }
-
-  def crackPassword(s: String): String = {
+  def crackPassword1(s: String): String = {
     @annotation.tailrec
     def loop(num: Int, acc: String): String = {
       if (acc.length == 8) acc
@@ -48,11 +39,11 @@ object PasswordCracker {
     loop(0, Map.empty).toList.sortBy(kvp => kvp._1).map(_._2).mkString
   }
 
-  private final val m = java.security.MessageDigest.getInstance("MD5")
+  private final val MessageDigest = java.security.MessageDigest.getInstance("MD5")
 
   private def calculateHash(s: String, num: Int): String = {
     val b = s"$s$num".getBytes("UTF-8")
-    m.update(b, 0, b.length)
-    m.digest().map(0xFF & _).map("%02x".format(_)).mkString
+    MessageDigest.update(b, 0, b.length)
+    MessageDigest.digest().map(0xFF & _).map("%02x".format(_)).mkString
   }
 }
